@@ -1,0 +1,154 @@
+:root {
+  --ink: #1a3260;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Nunito', sans-serif;
+  color: #1a3260;
+  background: #fffdf8;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: #2c7873;
+}
+a:hover {
+  color: #1a3260;
+}
+
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+}
+
+input[type='range'] {
+  accent-color: #72c93a;
+}
+
+@keyframes vw-pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ── Print pipeline ─────────────────────────────────────────────────────────
+   Screen and print share one DOM; print is driven by body[data-print-mode].
+   Use `visibility`, not `display` — a display:none ancestor cascade would
+   blank the print target and yield empty pages. */
+@media print {
+  /* Handout modal (word bank) prints its poster only. */
+  body:not([data-print-mode='sheet']) * {
+    visibility: hidden;
+  }
+  body:not([data-print-mode='sheet']) .vw-print-poster,
+  body:not([data-print-mode='sheet']) .vw-print-poster * {
+    visibility: visible;
+  }
+  body:not([data-print-mode='sheet']) .vw-modal-backdrop {
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  body:not([data-print-mode='sheet']) .vw-modal-card {
+    position: static !important;
+    max-height: none !important;
+    height: auto !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  body:not([data-print-mode='sheet']) .vw-modal-scroll {
+    overflow: visible !important;
+    flex: none !important;
+    border: none !important;
+    padding: 0 !important;
+    background: none !important;
+  }
+  body:not([data-print-mode='sheet']) .vw-print-poster {
+    position: static !important;
+    margin: 0 !important;
+  }
+
+  /* Worksheet sheets. */
+  body[data-print-mode='sheet'] * {
+    visibility: hidden;
+  }
+  body[data-print-mode='sheet'] .vw-sheet,
+  body[data-print-mode='sheet'] .vw-sheet * {
+    visibility: visible !important;
+  }
+  body[data-print-mode='sheet'] .vw-noprint {
+    display: none !important;
+  }
+  body[data-print-mode='sheet'] .vw-app-root {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body[data-print-mode='sheet'] .vw-content-area {
+    display: block !important;
+    overflow: visible !important;
+    flex: none !important;
+  }
+  body[data-print-mode='sheet'] .vw-sheet-area {
+    display: block !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+  body[data-print-mode='sheet'] .vw-sheet-cols,
+  body[data-print-mode='sheet'] .vw-sheet-scroll {
+    display: block !important;
+    overflow: visible !important;
+  }
+  body[data-print-mode='sheet'] .vw-sheet-wrap {
+    display: block !important;
+    gap: 0 !important;
+    overflow: visible !important;
+    zoom: 1 !important;
+    padding: 0 !important;
+  }
+  body[data-print-mode='sheet'] .vw-sheet {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    break-after: page;
+  }
+  body[data-print-mode='sheet'] .vw-sheet:last-child {
+    break-after: auto;
+  }
+  body[data-print-mode='sheet'] .vw-bingo-card,
+  body[data-print-mode='sheet'] .vw-flashcard {
+    break-inside: avoid;
+  }
+}
+
+@page {
+  margin: 12mm;
+}

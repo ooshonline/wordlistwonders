@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="./image-slot.js"></script>
+  <style>
+    body { margin: 0; }
+    a { color: #2C7873; }
+    a:hover { color: #1A3260; }
+    input[type="range"] { accent-color: #72C93A; }
+    @keyframes vw-pop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+    @media print {
+      body * { visibility: hidden; }
+      .vw-print-poster, .vw-print-poster * { visibility: visible; }
+      .vw-modal-backdrop:not([data-print-mode="sheet"] .vw-modal-backdrop) { position: static !important; background: none !important; padding: 0 !important; display: block !important; }
+      .vw-modal-card:not([data-print-mode="sheet"] .vw-modal-card) { position: static !important; max-height: none !important; height: auto !important; box-shadow: none !important; width: 100% !important; padding: 0 !important; display: block !important; }
+      .vw-modal-scroll:not([data-print-mode="sheet"] .vw-modal-scroll) { overflow: visible !important; flex: none !important; border: none !important; padding: 0 !important; background: none !important; }
+      .vw-print-poster { position: static !important; margin: 0 !important; }
+
+      body[data-print-mode="sheet"] * { visibility: hidden; }
+      body[data-print-mode="sheet"] .vw-sheet,
+      body[data-print-mode="sheet"] .vw-sheet * { visibility: visible !important; }
+      body[data-print-mode="sheet"] .vw-noprint { display: none !important; }
+      body[data-print-mode="sheet"] .vw-app-root { display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; background: #fff !important; }
+      body[data-print-mode="sheet"] .vw-content-area { display: block !important; overflow: visible !important; flex: none !important; }
+      body[data-print-mode="sheet"] .vw-sheet-area { display: block !important; overflow: visible !important; padding: 0 !important; background: #fff !important; }
+      body[data-print-mode="sheet"] .vw-sheet-cols,
+      body[data-print-mode="sheet"] .vw-sheet-scroll { display: block !important; overflow: visible !important; }
+      body[data-print-mode="sheet"] .vw-sheet-wrap { display: block !important; gap: 0 !important; overflow: visible !important; zoom: 1 !important; padding: 0 !important; }
+      body[data-print-mode="sheet"] .vw-sheet { box-shadow: none !important; border-radius: 0 !important; border: none !important; width: 100% !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; break-after: page; }
+      body[data-print-mode="sheet"] .vw-sheet:last-child { break-after: auto; }
+      body[data-print-mode="sheet"] .vw-bingo-card, body[data-print-mode="sheet"] .vw-flashcard { break-inside: avoid; }
+    }
+    @page { margin: 12mm; }
+  </style>
+</helmet>
+
+<div class="vw-app-root" style="height:100vh;overflow:hidden;display:flex;flex-direction:column;background:#FFFDF8;font-family:'Nunito',sans-serif;color:#1A3260;position:relative">
+
+  <sc-if value="{{ showToolbar }}" hint-placeholder-val="{{ true }}">
+    <div class="vw-app-chrome vw-noprint" style="display:flex;align-items:center;gap:18px;padding:14px 24px;background:#ffffff;border-bottom:2px solid #EDEAE0;flex-wrap:wrap">
+      <div style="font-family:'Baloo 2',sans-serif;font-size:24px;font-weight:800;color:#72C93A;white-space:nowrap;cursor:pointer" onClick="{{ goHome }}">Wordlist Wonders</div>
+      <button type="button" style="padding:10px 16px;border-radius:14px;background:transparent;color:#1A3260;border:none;font-family:'Nunito',sans-serif;font-weight:700;font-size:15px;cursor:pointer" style-hover="background:#F1EFE7" onClick="{{ goLibrary }}">My Word Lists</button>
+      <button type="button" style="padding:10px 16px;border-radius:14px;background:transparent;color:#1A3260;border:none;font-family:'Nunito',sans-serif;font-weight:700;font-size:15px;cursor:pointer" style-hover="background:#F1EFE7" onClick="{{ goEditor }}">Edit Set</button>
+      <div style="width:2px;align-self:stretch;background:#EDEAE0;border-radius:2px"></div>
+      <div style="font-weight:800;white-space:nowrap;font-family:'Baloo 2',sans-serif;font-size:18px">{{ currentSet.name }}</div>
+
+      <sc-if value="{{ isDisplay }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:#3FA6A0">Print</span>
+          <div style="display:flex;flex-wrap:wrap;background:#F1EFE7;border-radius:16px;padding:4px;gap:2px">
+            <sc-for list="{{ printModeOptions }}" as="opt" hint-placeholder-count="4">
+              <label style="{{ opt.segStyle }}"><input type="radio" name="vw-mode" checked="{{ opt.active }}" onChange="{{ opt.onClick }}" style="display:none"/>{{ opt.label }}</label>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:#E4572E">Project</span>
+          <div style="display:flex;flex-wrap:wrap;background:#F1EFE7;border-radius:16px;padding:4px;gap:2px">
+            <sc-for list="{{ playModeOptions }}" as="opt" hint-placeholder-count="6">
+              <label style="{{ opt.segStyle }}"><input type="radio" name="vw-mode" checked="{{ opt.active }}" onChange="{{ opt.onClick }}" style="display:none"/>{{ opt.label }}</label>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{ isGridMode }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;background:#F1EFE7;border-radius:999px;padding:4px;gap:2px">
+            <sc-for list="{{ styleOptions }}" as="opt" hint-placeholder-count="3">
+              <label style="{{ opt.segStyle }}"><input type="radio" name="vw-style" checked="{{ opt.active }}" onChange="{{ opt.onClick }}" style="display:none"/>{{ opt.label }}</label>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showZoomControl }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:6px;background:#F1EFE7;border-radius:999px;padding:4px 10px">
+            <button type="button" style="width:28px;height:28px;border-radius:999px;background:#fff;border:none;color:#1A3260;font-weight:800;cursor:pointer;font-size:16px" onClick="{{ onZoomOut }}">−</button>
+            <div style="font-size:13px;font-weight:700;min-width:44px;text-align:center">{{ zoomLabel }}</div>
+            <button type="button" style="width:28px;height:28px;border-radius:999px;background:#fff;border:none;color:#1A3260;font-weight:800;cursor:pointer;font-size:16px" onClick="{{ onZoomIn }}">+</button>
+            <button type="button" style="font-size:12px;font-weight:700;color:#3FA6A0;background:none;border:none;cursor:pointer" onClick="{{ onZoomReset }}">Reset</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showResetLayout }}" hint-placeholder-val="{{ false }}">
+          <select onChange="{{ onResetLayout }}" style="padding:9px 12px;border-radius:999px;background:#F1EFE7;color:#1A3260;border:none;font-weight:700;font-size:14px;cursor:pointer">
+            <option value="">Reset Layout…</option>
+            <option value="random">Random order</option>
+            <option value="tier">Arrange by tier</option>
+            <option value="alpha">Arrange alphabetically</option>
+          </select>
+        </sc-if>
+
+        <sc-if value="{{ isStylizedFloat }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:8px;background:#F1EFE7;border-radius:999px;padding:6px 14px">
+            <label style="font-size:13px;font-weight:700;opacity:0.75">Speed</label>
+            <input type="range" min="25" max="75" step="1" value="{{ wallSpeed }}" onChange="{{ onWallSpeedChange }}"/>
+            <div style="font-size:13px;font-weight:700;min-width:56px">{{ wallSpeed }}px/s</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showContentModeToggle }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;background:#F1EFE7;border-radius:999px;padding:4px;gap:2px">
+            <sc-for list="{{ contentModeOptions }}" as="opt" hint-placeholder-count="3">
+              <label style="{{ opt.segStyle }}"><input type="radio" name="vw-content" checked="{{ opt.active }}" onChange="{{ opt.onClick }}" style="display:none"/>{{ opt.label }}</label>
+            </sc-for>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <div style="flex:1"></div>
+      <sc-if value="{{ isDisplay }}" hint-placeholder-val="{{ true }}">
+        <button type="button" style="padding:11px 20px;border-radius:999px;background:#ffffff;color:#1A3260;border:2px solid #1A3260;font-family:'Nunito',sans-serif;font-weight:700;font-size:15px;cursor:pointer;display:{{ handoutBtnDisplay }}" onClick="{{ openPrint }}">Word Bank Handout</button>
+        <button type="button" style="padding:12px 22px;border-radius:999px;background:#72C93A;color:#ffffff;border:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 0 #4F8F22" style-hover="background:#5CAF2A" style-active="box-shadow:0 1px 0 #4F8F22;transform:translateY(3px)" onClick="{{ togglePresenter }}">Presenter Mode</button>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <div class="vw-app-chrome vw-content-area" style="flex:1;min-height:0;position:relative;overflow:hidden;display:flex;flex-direction:column">
+
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+      <div ref="{{ setHomeContainerRef }}" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#FFFDF8">
+        <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
+          <sc-for list="{{ floatingWords }}" as="fw" hint-placeholder-count="16">
+            <div ref="{{ fw.setRef }}" style="position:absolute;top:0;left:0;color:{{ fw.color }};opacity:{{ fw.opacity }};font-size:{{ fw.fontSize }};font-family:'Baloo 2',sans-serif;font-weight:700;white-space:nowrap;will-change:transform">{{ fw.text }}</div>
+          </sc-for>
+        </div>
+        <div style="position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px">
+          <div style="font-family:'Baloo 2',sans-serif;font-size:64px;font-weight:800;color:#1A3260">Wordlist Wonders</div>
+          <div style="font-size:18px;font-weight:600;color:#5B6B85;max-width:440px">Turn any wordlist into ready-to-run classroom activities.</div>
+          <button type="button" style="margin-top:12px;padding:18px 48px;border-radius:999px;background:#72C93A;color:#ffffff;border:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:22px;cursor:pointer;box-shadow:0 6px 0 #4F8F22" style-hover="background:#5CAF2A" style-active="box-shadow:0 2px 0 #4F8F22;transform:translateY(4px)" onClick="{{ goLibrary }}">Start</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isLibrary }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;overflow:auto;padding:32px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+          <h1 style="font-family:'Baloo 2',sans-serif;font-size:38px;margin:0;color:#1A3260">My Word Lists</h1>
+          <button type="button" style="padding:12px 22px;border-radius:999px;background:#72C93A;color:#ffffff;border:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 0 #4F8F22" style-hover="background:#5CAF2A" onClick="{{ onCreateSet }}">+ New Set</button>
+        </div>
+        <input value="{{ librarySearch }}" onChange="{{ onLibrarySearchChange }}" placeholder="Search by name, theme, grade, or tag…" style="width:100%;max-width:420px;padding:11px 16px;border-radius:999px;border:2px solid #EDEAE0;font-size:14px;color:#1A3260;margin-bottom:20px"/>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:20px">
+          <sc-for list="{{ setCards }}" as="sc" hint-placeholder-count="2">
+            <div style="background:#ffffff;border-radius:20px;box-shadow:0 6px 20px rgba(26,50,96,0.08);border:1px solid #EDEAE0;padding:22px">
+              <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;color:#3FA6A0">{{ sc.countLabel }}</div>
+              <div style="font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:700;margin:6px 0 10px">{{ sc.name }}</div>
+              <sc-if value="{{ sc.theme }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:12px;color:#5B6B85;margin-bottom:8px">{{ sc.theme }}</div>
+              </sc-if>
+              <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+                <span style="background:#FDEFD9;color:#8A5A19;font-weight:800;font-size:12px;padding:5px 10px;border-radius:999px">{{ sc.keyCount }} key</span>
+                <span style="background:#E1F3F1;color:#215E5A;font-weight:800;font-size:12px;padding:5px 10px;border-radius:999px">{{ sc.normalCount }} normal</span>
+                <span style="background:#F1EFE7;color:#6B7686;font-weight:800;font-size:12px;padding:5px 10px;border-radius:999px">{{ sc.bonusCount }} bonus</span>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button type="button" style="padding:10px 18px;border-radius:999px;background:#72C93A;color:#ffffff;border:none;font-weight:800;font-size:14px;cursor:pointer" onClick="{{ sc.onOpen }}">Make Activities</button>
+                <button type="button" style="padding:9px 16px;border-radius:999px;background:#ffffff;color:#1A3260;border:2px solid #1A3260;font-weight:700;font-size:14px;cursor:pointer" onClick="{{ sc.onEdit }}">Edit</button>
+                <button type="button" aria-label="Duplicate" style="width:38px;height:38px;border-radius:12px;background:#F1EFE7;border:none;color:#1A3260;display:flex;align-items:center;justify-content:center;cursor:pointer" onClick="{{ sc.onDuplicate }}">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+                <button type="button" aria-label="Delete" style="width:38px;height:38px;border-radius:12px;background:#F1EFE7;border:none;color:#C25450;display:flex;align-items:center;justify-content:center;cursor:pointer" onClick="{{ sc.onDelete }}">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEditor }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;overflow:auto;padding:32px">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+          <button type="button" aria-label="Back" style="width:44px;height:44px;border-radius:14px;background:#F1EFE7;border:none;color:#1A3260;display:flex;align-items:center;justify-content:center;cursor:pointer" onClick="{{ goDisplay }}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+          </button>
+          <input value="{{ currentSet.name }}" onChange="{{ onSetNameChange }}" style="font-family:'Baloo 2',sans-serif;font-size:30px;font-weight:700;border:none;background:transparent;padding:4px 8px;max-width:520px;color:#1A3260"/>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:20px;max-width:940px">
+          <input value="{{ setThemeVal }}" onChange="{{ onSetThemeChange }}" placeholder="Theme (e.g. Food)" style="padding:9px 14px;border-radius:12px;border:2px solid #EDEAE0;font-size:14px;color:#1A3260;width:180px"/>
+          <input value="{{ setGradeVal }}" onChange="{{ onSetGradeChange }}" placeholder="Grade level" style="padding:9px 14px;border-radius:12px;border:2px solid #EDEAE0;font-size:14px;color:#1A3260;width:140px"/>
+          <input value="{{ setTagsVal }}" onChange="{{ onSetTagsChange }}" placeholder="Tags, comma separated" style="padding:9px 14px;border-radius:12px;border:2px solid #EDEAE0;font-size:14px;color:#1A3260;width:220px"/>
+          <div style="display:flex;background:#F1EFE7;border-radius:999px;padding:4px;gap:2px">
+            <sc-for list="{{ voiceOptions }}" as="opt" hint-placeholder-count="2">
+              <label style="{{ opt.segStyle }}"><input type="radio" name="vw-voice" checked="{{ opt.active }}" onChange="{{ opt.onClick }}" style="display:none"/>{{ opt.label }}</label>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:grid;gap:14px;max-width:940px">
+          <sc-for list="{{ editWords }}" as="w" hint-placeholder-count="4">
+            <div style="background:#ffffff;border-radius:18px;border:1px solid #EDEAE0;display:flex;align-items:center;gap:16px;padding:14px">
+              <image-slot fit="contain" id="{{ w.slotId }}" style="width:72px;height:72px;flex:none;max-width:100%" shape="rounded" radius="14" placeholder="Image"></image-slot>
+              <div style="flex:1;display:grid;gap:6px">
+                <input value="{{ w.text }}" onChange="{{ w.onTextChange }}" placeholder="Word" style="padding:10px 14px;border-radius:12px;border:2px solid #EDEAE0;font-family:'Nunito',sans-serif;font-weight:700;font-size:16px;color:#1A3260"/>
+                <input value="{{ w.clue }}" onChange="{{ w.onClueChange }}" placeholder="Clue / definition — used for crossword puzzles" style="padding:8px 14px;border-radius:12px;border:2px solid #F1EFE7;font-family:'Nunito',sans-serif;font-weight:600;font-size:13px;color:#5B6B85"/>
+              </div>
+              <div style="display:flex;background:#F1EFE7;border-radius:999px;padding:4px;gap:2px">
+                <sc-for list="{{ w.tierOptions }}" as="t" hint-placeholder-count="3">
+                  <label style="{{ t.segStyle }}"><input type="radio" name="tier-{{ w.id }}" checked="{{ t.active }}" onChange="{{ t.onClick }}" style="display:none"/>{{ t.label }}</label>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:5px;flex:none">
+                <sc-for list="{{ w.colorSwatches }}" as="cs" hint-placeholder-count="8">
+                  <button type="button" style="{{ cs.style }}" onClick="{{ cs.onClick }}" aria-label="Word color"></button>
+                </sc-for>
+              </div>
+              <button type="button" aria-label="Play word" style="width:38px;height:38px;border-radius:12px;background:#F1EFE7;border:none;color:#3FA6A0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" onClick="{{ w.onPlay }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+              </button>
+              <button type="button" aria-label="Record audio" style="width:38px;height:38px;border-radius:12px;background:{{ w.recordedBg }};border:none;color:{{ w.recordedColor }};display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" onClick="{{ w.onToggleRecorded }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19v3"/><path d="M8 22h8"/><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/></svg>
+              </button>
+              <button type="button" aria-label="Remove word" style="width:38px;height:38px;border-radius:12px;background:#F1EFE7;border:none;color:#C25450;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" onClick="{{ w.onDelete }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+          </sc-for>
+          <button type="button" style="padding:14px;border-radius:16px;background:#ffffff;color:#1A3260;border:2px dashed #C7D9C3;font-weight:800;font-size:15px;cursor:pointer" onClick="{{ onAddWord }}">+ Add Word</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isDisplay }}" hint-placeholder-val="{{ true }}">
+
+      <sc-if value="{{ isGridStatic }}" hint-placeholder-val="{{ true }}">
+        <div ref="{{ setGridStaticContainerRef }}" style="flex:1;position:relative;overflow:auto;background:#FBF7ED" onMouseMove="{{ onGridMouseMove }}" onMouseUp="{{ onGridMouseUp }}" onMouseLeave="{{ onGridMouseUp }}" onClick="{{ onGridBackgroundClick }}">
+          <div style="{{ zoomWrapStyle }}">
+            <sc-for list="{{ gridWords }}" as="w" hint-placeholder-count="6">
+              <div style="position:absolute;left:{{ w.left }};top:{{ w.top }};transform:scale({{ w.scale }});transform-origin:top left;cursor:grab;user-select:none" onMouseDown="{{ w.onDragStart }}">
+                <div ref="{{ w.setRef }}" style="{{ w.contentStyle }};position:relative">
+                  <sc-if value="{{ w.showImage }}" hint-placeholder-val="{{ true }}">
+                    <image-slot fit="contain" id="{{ w.slotId }}" style="width:{{ w.imgSize }};height:{{ w.imgSize }};max-width:100%;margin:0 auto 10px" shape="rounded" radius="16" placeholder="Image"></image-slot>
+                  </sc-if>
+                  <sc-if value="{{ w.showText }}" hint-placeholder-val="{{ true }}">
+                    <div style="text-align:center">{{ w.text }}</div>
+                  </sc-if>
+                  <sc-if value="{{ w.selected }}" hint-placeholder-val="{{ false }}">
+                    <div onMouseDown="{{ w.onResizeStart }}" style="position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:8px;background:#1A3260;cursor:nwse-resize;display:flex;align-items:center;justify-content:center">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v6h-6"/><path d="M3 9V3h6"/><path d="M21 3 14 10"/><path d="m3 21 7-7"/></svg>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isStylizedFloat }}" hint-placeholder-val="{{ false }}">
+        <div ref="{{ setGridFloatContainerRef }}" style="flex:1;position:relative;overflow:hidden;background:#FBF7ED">
+          <sc-for list="{{ floatGridWords }}" as="w" hint-placeholder-count="6">
+            <div ref="{{ w.setRef }}" style="position:absolute;top:0;left:0;will-change:transform">
+              <div style="{{ w.contentStyle }}">
+                <sc-if value="{{ w.showImage }}" hint-placeholder-val="{{ true }}">
+                  <image-slot fit="contain" id="{{ w.slotId }}" style="width:{{ w.imgSize }};height:{{ w.imgSize }};max-width:100%;margin:0 auto 10px" shape="rounded" radius="16" placeholder="Image"></image-slot>
+                </sc-if>
+                <sc-if value="{{ w.showText }}" hint-placeholder-val="{{ true }}">
+                  <div style="text-align:center">{{ w.text }}</div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCarouselMode }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:32px">
+          <div style="display:flex;align-items:center;gap:32px">
+            <button type="button" aria-label="Previous" style="width:56px;height:56px;border-radius:999px;background:#F1EFE7;border:none;color:#1A3260;display:flex;align-items:center;justify-content:center;cursor:pointer" onClick="{{ onCarouselPrev }}">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div style="{{ carouselWord.contentStyle }};width:420px;text-align:center;animation:vw-pop 0.25s ease">
+              <sc-if value="{{ carouselWord.showImage }}" hint-placeholder-val="{{ true }}">
+                <image-slot fit="contain" id="{{ carouselWord.slotId }}" style="width:min(280px,100%);height:280px;max-height:38vh;margin:0 auto 16px" shape="rounded" radius="22" placeholder="Image"></image-slot>
+              </sc-if>
+              <sc-if value="{{ carouselWord.showText }}" hint-placeholder-val="{{ true }}">
+                <div>{{ carouselWord.text }}</div>
+              </sc-if>
+            </div>
+            <button type="button" aria-label="Next" style="width:56px;height:56px;border-radius:999px;background:#F1EFE7;border:none;color:#1A3260;display:flex;align-items:center;justify-content:center;cursor:pointer" onClick="{{ onCarouselNext }}">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+          <div style="display:flex;align-items:center;gap:20px">
+            <button type="button" aria-label="Play/Pause" style="width:48px;height:48px;border-radius:999px;background:#72C93A;color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 0 #4F8F22" onClick="{{ onTogglePlay }}">{{ playIcon }}</button>
+            <div style="display:flex;align-items:center;gap:8px">
+              <label style="font-size:14px;font-weight:700;opacity:0.7">Seconds/word</label>
+              <input type="number" min="1" max="60" style="width:64px;padding:8px;border-radius:10px;border:2px solid #EDEAE0;font-weight:700" value="{{ carouselSpeed }}" onChange="{{ onSpeedChange }}"/>
+            </div>
+            <div style="font-size:14px;font-weight:700;opacity:0.7">{{ carouselProgress }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isRevealMode }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;overflow:auto;padding:32px">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+            <button type="button" style="padding:10px 18px;border-radius:999px;background:#F1EFE7;color:#1A3260;border:none;font-weight:800;cursor:pointer" onClick="{{ onResetReveal }}">Reset All</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px">
+            <sc-for list="{{ revealWords }}" as="w" hint-placeholder-count="6">
+              <div style="{{ w.contentStyle }};text-align:center;cursor:pointer" onClick="{{ w.onToggle }}">
+                <image-slot fit="contain" id="{{ w.slotId }}" style="width:100%;height:160px;max-height:26vh;margin-bottom:10px" shape="rounded" radius="16" placeholder="Image"></image-slot>
+                <sc-if value="{{ w.revealed }}" hint-placeholder-val="{{ false }}">
+                  <div>{{ w.text }}</div>
+                </sc-if>
+                <sc-if value="{{ w.hidden }}" hint-placeholder-val="{{ true }}">
+                  <div style="opacity:0.5;font-size:0.6em;font-weight:700">Click to reveal</div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isQuizMode }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:32px;overflow:auto">
+
+          <sc-if value="{{ quizDone }}" hint-placeholder-val="{{ false }}">
+            <div style="font-family:'Baloo 2',sans-serif;font-size:34px;font-weight:700">Round Complete!</div>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+              <sc-for list="{{ quizScoreboards }}" as="sb" hint-placeholder-count="2">
+                <div style="background:#ffffff;border-radius:18px;box-shadow:0 6px 20px rgba(26,50,96,0.08);padding:14px 22px;text-align:center;min-width:140px">
+                  <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#3FA6A0">{{ sb.name }}</div>
+                  <div style="font-family:'Baloo 2',sans-serif;font-size:34px;font-weight:800">{{ sb.score }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ quizMissedWords.length }}" hint-placeholder-val="{{ false }}">
+              <div style="max-width:500px;text-align:center">
+                <div style="font-weight:800;margin-bottom:6px">Words the class missed:</div>
+                <div style="font-size:15px;color:#5B6B85">{{ quizMissedWordsLabel }}</div>
+              </div>
+            </sc-if>
+            <div style="display:flex;gap:12px">
+              <button type="button" style="padding:12px 22px;border-radius:999px;background:#ffffff;color:#1A3260;border:2px solid #1A3260;font-weight:700;cursor:pointer" onClick="{{ onPlayQuizAgain }}">Play Again</button>
+              <sc-if value="{{ quizMissedWords.length }}" hint-placeholder-val="{{ false }}">
+                <button type="button" style="padding:12px 22px;border-radius:999px;background:#72C93A;color:#fff;border:none;font-weight:800;cursor:pointer" onClick="{{ onCreateReviewSet }}">Create review set from missed words</button>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ quizNotDone }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center">
+              <div style="display:flex;background:#F1EFE7;border-radius:999px;padding:4px;gap:2px">
+                <sc-for list="{{ quizTeamOptions }}" as="t" hint-placeholder-count="3">
+                  <label style="{{ t.segStyle }}"><input type="radio" name="vw-teams" checked="{{ t.active }}" onChange="{{ t.onClick }}" style="display:none"/>{{ t.label }}</label>
+                </sc-for>
+              </div>
+              <div style="display:flex;background:#F1EFE7;border-radius:999px;padding:4px;gap:2px">
+                <sc-for list="{{ quizCountdownOptions }}" as="c" hint-placeholder-count="5">
+                  <label style="{{ c.segStyle }}"><input type="radio" name="vw-countdown" checked="{{ c.active }}" onChange="{{ c.onClick }}" style="display:none"/>{{ c.label }}</label>
+                </sc-for>
+              </div>
+              <sc-if value="{{ showQuizCustomInput }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:6px;background:#F1EFE7;border-radius:999px;padding:6px 14px">
+                  <label style="font-size:13px;font-weight:700;opacity:0.75">Seconds</label>
+                  <input type="number" min="3" max="300" style="width:64px;padding:6px;border-radius:8px;border:2px solid #EDEAE0;font-weight:700" value="{{ quizCustomSeconds }}" onChange="{{ onQuizCustomSecondsChange }}"/>
+                </div>
+              </sc-if>
+            </div>
+            <div style="font-size:14px;font-weight:800;opacity:0.6">{{ quizProgress }}</div>
+            <sc-if value="{{ showQuizTimer }}" hint-placeholder-val="{{ false }}">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:28px;font-weight:800;color:#F0AC3D">{{ quizTimeLeft }}s</div>
+            </sc-if>
+            <image-slot fit="contain" id="{{ quizImageSlotId }}" style="width:min(320px,100%);height:220px;max-height:30vh" shape="rounded" radius="22" placeholder="Image"></image-slot>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:640px">
+              <sc-for list="{{ quizOptions }}" as="opt" hint-placeholder-count="4">
+                <button type="button" style="{{ opt.style }}" onClick="{{ opt.onClick }}">{{ opt.text }}</button>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+              <sc-for list="{{ quizScoreboards }}" as="sb" hint-placeholder-count="2">
+                <div style="background:#ffffff;border-radius:18px;box-shadow:0 6px 20px rgba(26,50,96,0.08);padding:14px 22px;text-align:center;min-width:130px">
+                  <div style="font-size:12px;font-weight:800;text-transform:uppercase;color:#3FA6A0">{{ sb.name }}</div>
+                  <div style="font-family:'Baloo 2',sans-serif;font-size:34px;font-weight:800">{{ sb.score }}</div>
+                  <button type="button" style="margin-top:6px;padding:8px 16px;border-radius:999px;background:#E1F3F1;color:#215E5A;border:none;font-weight:800;cursor:pointer" disabled="{{ sb.disabled }}" onClick="{{ sb.onAdd }}">+1 point</button>
+                </div>
+              </sc-for>
+              <button type="button" style="padding:14px 26px;border-radius:999px;background:#72C93A;color:#fff;border:none;font-weight:800;font-size:16px;cursor:pointer;box-shadow:0 4px 0 #4F8F22" disabled="{{ quizNextDisabled }}" onClick="{{ onNextQuestion }}">Next Word</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isMissingMode }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;overflow:auto;padding:32px;display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;justify-content:flex-end;gap:10px">
+            <sc-if value="{{ missingHasRemoved }}" hint-placeholder-val="{{ false }}">
+              <button type="button" style="padding:9px 16px;border-radius:999px;background:#F1EFE7;color:#1A3260;border:none;font-weight:700;cursor:pointer" onClick="{{ onRevealMissing }}">Reveal</button>
+            </sc-if>
+            <button type="button" style="padding:10px 18px;border-radius:999px;background:#72C93A;color:#fff;border:none;font-weight:800;cursor:pointer" onClick="{{ onRemoveOneWord }}">{{ missingButtonLabel }}</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px">
+            <sc-for list="{{ missingWords }}" as="w" hint-placeholder-count="6">
+              <div style="{{ w.contentStyle }};text-align:center">
+                <sc-if value="{{ w.isRemoved }}" hint-placeholder-val="{{ false }}">
+                  <div style="width:{{ w.imgSize }};height:{{ w.imgSize }};margin:0 auto 10px;border-radius:16px;background:#EDEAE0"></div>
+                  <div style="opacity:0.3">?</div>
+                </sc-if>
+                <sc-if value="{{ w.notRemoved }}" hint-placeholder-val="{{ true }}">
+                  <image-slot fit="contain" id="{{ w.slotId }}" style="width:{{ w.imgSize }};height:{{ w.imgSize }};max-width:100%;margin:0 auto 10px" shape="rounded" radius="16" placeholder="Image"></image-slot>
+                  <div>{{ w.text }}</div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isFlyswatterMode }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1;overflow:auto;padding:32px;display:flex;flex-direction:column;gap:20px;align-items:center">
+          <div style="display:flex;align-items:center;gap:20px">
+            <div style="background:#ffffff;border-radius:18px;box-shadow:0 6px 20px rgba(26,50,96,0.08);padding:12px 20px;text-align:center;min-width:110px">
+              <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#3FA6A0">Team A</div>
+              <div style="font-family:'Baloo 2',sans-serif;font-size:28px;font-weight:800">{{ flyswatterScoreA }}</div>
+            </div>
+            <div style="text-align:center;padding:14px 24px;background:#FDEFD9;border-radius:16px;color:#7A4E14;font-weight:800;font-size:15px">🗣️ Call out a random word from the board.</div>
+            <div style="background:#ffffff;border-radius:18px;box-shadow:0 6px 20px rgba(26,50,96,0.08);padding:12px 20px;text-align:center;min-width:110px">
+              <div style="font-size:11px;font-weight:800;text-transform:uppercase;color:#3FA6A0">Team B</div>
+              <div style="font-family:'Baloo 2',sans-serif;font-size:28px;font-weight:800">{{ flyswatterScoreB }}</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;width:100%;max-width:900px">
+            <sc-for list="{{ flyswatterWords }}" as="w" hint-placeholder-count="8">
+              <button type="button" style="{{ w.style }}" onClick="{{ w.onClick }}">
+                <image-slot fit="contain" id="{{ w.slotId }}" style="width:100%;aspect-ratio:1;max-height:100%" shape="rounded" radius="12" placeholder="Image"></image-slot>
+                <div>{{ w.text }}</div>
+              </button>
+            </sc-for>
+          </div>
+          <div style="font-size:13px;font-weight:700;opacity:0.6">Tap the word that was swatted, then award the point.</div>
+          <div style="display:flex;gap:10px">
+            <button type="button" style="padding:9px 16px;border-radius:999px;background:#E1F3F1;color:#215E5A;border:none;font-weight:800;cursor:pointer" disabled="{{ flyswatterAwardDisabled }}" onClick="{{ onFlyswatterAddA }}">Award Team A</button>
+            <button type="button" style="padding:9px 16px;border-radius:999px;background:#E1F3F1;color:#215E5A;border:none;font-weight:800;cursor:pointer" disabled="{{ flyswatterAwardDisabled }}" onClick="{{ onFlyswatterAddB }}">Award Team B</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isSheetMode }}" hint-placeholder-val="{{ false }}">
+        <div class="vw-sheet-area" style="flex:1;min-height:0;overflow:hidden;padding:22px;background:#EFEAE1;display:flex;flex-direction:column;align-items:center;gap:20px">
+
+          <div class="vw-noprint" style="flex:none;display:flex;flex-direction:column;gap:12px;align-items:center;background:#ffffff;border:1px solid #E3DDCE;border-radius:22px;padding:16px 22px;box-shadow:0 6px 18px rgba(26,50,96,0.08)">
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center">
+              <div style="font-family:'Baloo 2',sans-serif;font-size:22px;font-weight:800">{{ sheetKindLabel }}</div>
+              <div style="font-size:13px;font-weight:700;opacity:0.5">{{ sheetSummary }}</div>
+              <sc-if value="{{ showSheetShuffle }}" hint-placeholder-val="{{ true }}">
+                <button type="button" style="padding:10px 18px;border-radius:999px;background:#ffffff;color:#1A3260;border:2px solid #1A3260;font-family:'Nunito',sans-serif;font-weight:700;font-size:14px;cursor:pointer;flex:none;white-space:nowrap" onClick="{{ onRegenerateSheet }}">Shuffle</button>
+              </sc-if>
+              <button type="button" style="padding:10px 18px;border-radius:999px;background:#F1EFE7;color:#1A3260;border:none;font-family:'Nunito',sans-serif;font-weight:700;font-size:14px;cursor:pointer;flex:none;white-space:nowrap" style-hover="background:#E7E3D6" onClick="{{ onToggleSheetEditor }}">{{ sheetEditorToggleLabel }}</button>
+              <button type="button" style="padding:11px 22px;border-radius:999px;background:#72C93A;color:#ffffff;border:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 4px 0 #4F8F22;flex:none;white-space:nowrap" style-hover="background:#5CAF2A" style-active="box-shadow:0 1px 0 #4F8F22;transform:translateY(3px)" onClick="{{ onPrintSheet }}">Print</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;justify-content:center">
+              <sc-for list="{{ sheetControls }}" as="ctl" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <label style="font-size:11px;font-weight:800;opacity:0.5;text-transform:uppercase;letter-spacing:0.06em">{{ ctl.label }}</label>
+                  <sc-if value="{{ ctl.isSeg }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;background:#F1EFE7;border-radius:999px;padding:4px;gap:2px">
+                      <sc-for list="{{ ctl.options }}" as="opt" hint-placeholder-count="3">
+                        <label style="{{ opt.segStyle }}"><input type="radio" name="{{ ctl.name }}" checked="{{ opt.active }}" onChange="{{ opt.onClick }}" style="display:none"/>{{ opt.label }}</label>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ ctl.isNumber }}" hint-placeholder-val="{{ false }}">
+                    <input type="number" min="{{ ctl.min }}" max="{{ ctl.max }}" value="{{ ctl.value }}" onChange="{{ ctl.onChange }}" style="width:70px;padding:8px 10px;border-radius:10px;border:2px solid #EDEAE0;font-family:'Nunito',sans-serif;font-weight:800;color:#1A3260"/>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ showSheetWarning }}" hint-placeholder-val="{{ false }}">
+              <div style="background:#FDEFD9;color:#7A4E14;font-size:13px;font-weight:700;padding:9px 16px;border-radius:12px;max-width:640px;text-align:center;text-wrap:pretty">{{ sheetWarning }}</div>
+            </sc-if>
+          </div>
+
+          <div class="vw-sheet-cols" style="flex:1;min-height:0;width:100%;display:flex;align-items:stretch;justify-content:center;gap:22px">
+
+          <sc-if value="{{ sheetEditorOpen }}" hint-placeholder-val="{{ false }}">
+            <div class="vw-noprint" style="flex:0 0 380px;min-width:0;overflow:auto;align-self:stretch;background:#ffffff;border:1px solid #E3DDCE;border-radius:22px;padding:20px 22px;box-shadow:0 6px 18px rgba(26,50,96,0.08);display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <div style="font-family:'Baloo 2',sans-serif;font-size:18px;font-weight:800">Words in this activity</div>
+                <div style="font-size:12px;font-weight:700;opacity:0.5">Edits apply to every activity and to your saved list</div>
+              </div>
+              <sc-for list="{{ sheetEditRows }}" as="row" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <sc-if value="{{ row.showLabel }}" hint-placeholder-val="{{ false }}">
+                    <div style="{{ row.labelStyle }}">{{ row.label }}</div>
+                  </sc-if>
+                  <input value="{{ row.text }}" onChange="{{ row.onTextChange }}" placeholder="Word" style="flex:1 1 140px;min-width:0;padding:9px 13px;border-radius:11px;border:2px solid #EDEAE0;font-family:'Nunito',sans-serif;font-weight:700;font-size:15px;color:#1A3260"/>
+                  <sc-if value="{{ showClueColumn }}" hint-placeholder-val="{{ true }}">
+                    <input value="{{ row.clue }}" onChange="{{ row.onClueChange }}" placeholder="Clue students will read…" style="flex:1 1 100%;order:9;padding:8px 13px;border-radius:11px;border:2px solid #F1EFE7;font-family:'Nunito',sans-serif;font-weight:600;font-size:13px;color:#5B6B85"/>
+                  </sc-if>
+                  <button type="button" aria-label="Remove word" style="width:36px;height:36px;border-radius:11px;background:#F1EFE7;border:none;color:#C25450;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" onClick="{{ row.onDelete }}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
+                </div>
+              </sc-for>
+              <button type="button" style="padding:12px;border-radius:14px;background:#ffffff;color:#1A3260;border:2px dashed #C7D9C3;font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;cursor:pointer" style-hover="background:#F6FBF3" onClick="{{ onAddSheetWord }}">+ Add Word</button>
+            </div>
+          </sc-if>
+
+          <div class="vw-sheet-scroll" ref="{{ setSheetScrollRef }}" style="flex:1;min-width:0;overflow:auto">
+          <div class="vw-sheet-wrap" style="display:flex;flex-direction:column;align-items:flex-start;gap:30px;padding-bottom:8px;zoom:{{ sheetZoom }}">
+            <sc-for list="{{ sheetPages }}" as="page" hint-placeholder-count="1">
+              <div class="vw-sheet" style="width:816px;flex:none;margin-inline:auto;min-height:1056px;background:#ffffff;box-shadow:0 12px 32px rgba(26,50,96,0.16);padding:52px;box-sizing:border-box;display:flex;flex-direction:column;gap:22px;color:#1A3260">
+
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;border-bottom:2px solid #EDEAE0;padding-bottom:10px">
+                  <div style="font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:800">{{ page.title }}</div>
+                  <div style="font-size:12px;font-weight:800;opacity:0.45;white-space:nowrap;text-transform:uppercase;letter-spacing:0.06em">{{ page.subtitle }}</div>
+                </div>
+
+                <sc-if value="{{ page.showNameLine }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;gap:28px;font-size:13px;font-weight:800;color:#8C8676">
+                    <div style="flex:1;border-bottom:2px dotted #C9C3B4;padding-bottom:5px">Name</div>
+                    <div style="width:190px;border-bottom:2px dotted #C9C3B4;padding-bottom:5px">Date</div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ page.isBingo }}" hint-placeholder-val="{{ false }}">
+                  <div style="flex:1;display:grid;grid-template-columns:repeat({{ page.columns }}, minmax(0,1fr));gap:26px;align-content:center">
+                    <sc-for list="{{ page.cards }}" as="card" hint-placeholder-count="2">
+                      <div class="vw-bingo-card" style="border:2px solid #1A3260;border-radius:16px;padding:16px">
+                        <div style="font-family:'Baloo 2',sans-serif;font-size:14px;font-weight:800;text-align:center;margin-bottom:10px;letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ card.title }}</div>
+                        <div style="display:grid;grid-template-columns:repeat({{ card.size }}, 1fr);gap:6px">
+                          <sc-for list="{{ card.cells }}" as="c" hint-placeholder-count="9">
+                            <div style="{{ c.style }}">
+                              <sc-if value="{{ c.showImage }}" hint-placeholder-val="{{ false }}">
+                                <image-slot fit="contain" id="{{ c.slotId }}" style="{{ c.imageStyle }}" shape="rounded" radius="8" placeholder="Image"></image-slot>
+                              </sc-if>
+                              <sc-if value="{{ c.showText }}" hint-placeholder-val="{{ true }}">
+                                <div style="{{ c.textStyle }}">{{ c.text }}</div>
+                              </sc-if>
+                            </div>
+                          </sc-for>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ page.isFlash }}" hint-placeholder-val="{{ false }}">
+                  <div style="flex:1;display:grid;grid-template-columns:repeat({{ page.columns }}, 1fr);grid-template-rows:repeat({{ page.rows }}, 1fr)">
+                    <sc-for list="{{ page.cards }}" as="card" hint-placeholder-count="4">
+                      <div class="vw-flashcard" style="{{ card.style }}">
+                        <sc-if value="{{ card.showImage }}" hint-placeholder-val="{{ true }}">
+                          <image-slot fit="contain" id="{{ card.slotId }}" style="{{ card.imageStyle }}" shape="rounded" radius="12" placeholder="Image"></image-slot>
+                        </sc-if>
+                        <sc-if value="{{ card.showText }}" hint-placeholder-val="{{ true }}">
+                          <div style="{{ card.textStyle }}">{{ card.text }}</div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ page.isSearch }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:26px;align-items:center">
+                    <div style="display:grid;grid-template-columns:repeat({{ page.size }}, {{ page.cellSize }});border:2px solid #1A3260">
+                      <sc-for list="{{ page.cells }}" as="c" hint-placeholder-count="144">
+                        <div style="{{ c.style }}">{{ c.ch }}</div>
+                      </sc-for>
+                    </div>
+                    <div style="width:100%">
+                      <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:#3FA6A0;margin-bottom:10px">Find these words</div>
+                      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px 18px">
+                        <sc-for list="{{ page.bank }}" as="b" hint-placeholder-count="12">
+                          <div style="font-size:15px;font-weight:700;letter-spacing:0.03em">{{ b }}</div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ page.isCross }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:28px">
+                    <div style="display:grid;grid-template-columns:repeat({{ page.cols }}, {{ page.cellSize }});justify-content:center">
+                      <sc-for list="{{ page.cells }}" as="c" hint-placeholder-count="100">
+                        <div style="{{ c.style }}">
+                          <sc-if value="{{ c.hasNum }}" hint-placeholder-val="{{ false }}">
+                            <span style="position:absolute;top:1px;left:3px;font-size:9px;font-weight:800;opacity:0.7">{{ c.num }}</span>
+                          </sc-if>
+                          <sc-if value="{{ c.showLetter }}" hint-placeholder-val="{{ false }}">
+                            <span>{{ c.letter }}</span>
+                          </sc-if>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+                      <div>
+                        <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:#3FA6A0;margin-bottom:10px">Across</div>
+                        <sc-for list="{{ page.across }}" as="cl" hint-placeholder-count="5">
+                          <div style="font-size:14px;font-weight:600;margin-bottom:7px;text-wrap:pretty"><b>{{ cl.num }}.</b> {{ cl.clue }}</div>
+                        </sc-for>
+                      </div>
+                      <div>
+                        <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:#E4572E;margin-bottom:10px">Down</div>
+                        <sc-for list="{{ page.down }}" as="cl" hint-placeholder-count="5">
+                          <div style="font-size:14px;font-weight:600;margin-bottom:7px;text-wrap:pretty"><b>{{ cl.num }}.</b> {{ cl.clue }}</div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+                </sc-if>
+
+              </div>
+            </sc-for>
+          </div>
+          </div>
+
+          </div>
+        </div>
+      </sc-if>
+
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:20px;left:20px;background:#1A3260;color:#fff;padding:12px 18px;border-radius:14px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 24px rgba(0,0,0,0.25);z-index:60">
+      <span style="font-size:14px;font-weight:600">{{ toast }}</span>
+      <button type="button" style="background:none;border:none;color:#72C93A;font-weight:800;cursor:pointer;font-size:14px" onClick="{{ onUndoToast }}">Undo</button>
+      <button type="button" aria-label="Dismiss" style="background:none;border:none;color:#fff;opacity:0.6;cursor:pointer;font-size:16px" onClick="{{ onDismissToast }}">×</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ presenterMode }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);background:rgba(26,50,96,0.9);backdrop-filter:blur(6px);color:#fff;padding:10px 22px;border-radius:999px 999px 0 0;display:flex;align-items:center;gap:16px;z-index:50">
+      <span style="font-size:13px;opacity:0.85;font-weight:700">{{ currentSet.name }} · {{ displayModeLabel }}</span>
+      <button type="button" style="padding:8px 16px;border-radius:999px;background:#72C93A;color:#fff;border:none;font-weight:800;cursor:pointer" onClick="{{ togglePresenter }}">Exit Presenter Mode (Esc)</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ printOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="vw-modal-backdrop" style="position:fixed;inset:0;background:rgba(26,50,96,0.55);z-index:100;display:flex;align-items:center;justify-content:center;padding:32px">
+      <div class="vw-modal-card" style="background:#ffffff;border-radius:22px;box-shadow:0 20px 60px rgba(26,50,96,0.3);width:min(900px,100%);max-height:90vh;display:flex;flex-direction:column;padding:26px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+          <div style="font-family:'Baloo 2',sans-serif;font-size:26px;font-weight:700">Print Handout — {{ currentSet.name }}</div>
+          <button type="button" aria-label="Close" style="width:38px;height:38px;border-radius:12px;background:#F1EFE7;border:none;color:#1A3260;display:flex;align-items:center;justify-content:center;cursor:pointer" onClick="{{ closePrint }}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap">
+          <div style="display:flex;background:#F1EFE7;border-radius:999px;padding:4px;gap:2px">
+            <label style="{{ printManualSegStyle }}"><input type="radio" name="vw-printmode" checked="{{ printModeManual }}" onChange="{{ setPrintModeManual }}" style="display:none"/>Manual</label>
+            <label style="{{ printRandomSegStyle }}"><input type="radio" name="vw-printmode" checked="{{ printModeRandom }}" onChange="{{ setPrintModeRandom }}" style="display:none"/>Random %</label>
+          </div>
+          <sc-if value="{{ printModeManual }}" hint-placeholder-val="{{ true }}">
+            <div style="font-size:13px;font-weight:700;opacity:0.65">Click a word below to blank it for students to fill in.</div>
+          </sc-if>
+          <sc-if value="{{ printModeRandom }}" hint-placeholder-val="{{ false }}">
+            <input type="range" min="0" max="100" step="5" value="{{ printPercent }}" onChange="{{ onPercentChange }}"/>
+            <div style="font-size:13px;font-weight:700;min-width:40px">{{ printPercent }}%</div>
+            <button type="button" style="padding:9px 16px;border-radius:999px;background:#ffffff;color:#1A3260;border:2px solid #1A3260;font-weight:700;cursor:pointer" onClick="{{ onShuffleRandom }}">Shuffle blanks</button>
+          </sc-if>
+        </div>
+        <div class="vw-modal-scroll" style="overflow:auto;flex:1;border:2px solid #EDEAE0;border-radius:18px;padding:26px">
+          <div class="vw-print-poster" style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
+            <sc-for list="{{ printItems }}" as="p" hint-placeholder-count="6">
+              <div style="text-align:center;padding:14px;border:2px dashed #D9D4C4;border-radius:16px;cursor:pointer" onClick="{{ p.onToggle }}">
+                <div style="font-weight:800;font-size:18px">
+                  <sc-if value="{{ p.blanked }}" hint-placeholder-val="{{ false }}">
+                    <div style="border:2px solid #1A3260;height:34px;border-radius:8px;margin:0 auto;width:80%"></div>
+                  </sc-if>
+                  <sc-if value="{{ p.notBlanked }}" hint-placeholder-val="{{ true }}">
+                    <div>{{ p.text }}</div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px">
+          <button type="button" style="padding:11px 20px;border-radius:999px;background:#ffffff;color:#1A3260;border:2px solid #1A3260;font-weight:700;cursor:pointer" onClick="{{ closePrint }}">Close</button>
+          <button type="button" style="padding:12px 22px;border-radius:999px;background:#72C93A;color:#ffffff;border:none;font-weight:800;cursor:pointer;box-shadow:0 4px 0 #4F8F22" onClick="{{ doPrint }}">Print</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;floatSpeed&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 45, &quot;min&quot;: 15, &quot;max&quot;: 100, &quot;step&quot;: 5, &quot;unit&quot;: &quot;px/sec&quot;, &quot;section&quot;: &quot;Word Wall&quot;, &quot;tsType&quot;: &quot;number&quot; },
+  &quot;uniformWallColor&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;rainbow&quot;, &quot;options&quot;: [&quot;rainbow&quot;, &quot;single&quot;], &quot;section&quot;: &quot;Word Wall&quot;, &quot;tsType&quot;: &quot;string&quot; },
+  &quot;wallColor&quot;: { &quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#3FA6A0&quot;, &quot;options&quot;: [&quot;#E4572E&quot;, &quot;#F0AC3D&quot;, &quot;#72C93A&quot;, &quot;#3FA6A0&quot;, &quot;#8B5FBF&quot;], &quot;section&quot;: &quot;Word Wall&quot;, &quot;tsType&quot;: &quot;string&quot; }
+}">
+class Component extends DCLogic {
+  state = {
+    view: 'home',
+    floatingWords: [],
+    presenterMode: false,
+    displayMode: 'grid',
+    stylePreset: 'card',
+    contentMode: 'both',
+    toast: null,
+    librarySearch: '',
+    missingWord: { removedId: null, revealed: false, history: [] },
+    flyswatter: { scoreA: 0, scoreB: 0, lastWordId: null },
+    bingo: { count: 6, gridSize: 'auto', perPage: 2, content: 'words', allowRepeat: false },
+    flash: { perPage: 4, content: 'imageWord', cutLines: true },
+    wordsearch: { size: 12, diagonals: true, backwards: false, answerKey: false },
+    crossword: { answerKey: false },
+    currentSetId: 'set-food',
+    selectedWordId: null,
+    dragging: null,
+    resizing: null,
+    gridZoom: 1,
+    wallSpeed: 45,
+    carouselIndex: 0,
+    carouselPlaying: false,
+    revealedBySet: {},
+    quiz: { order: [], pointer: 0, targetId: null, options: [], answered: false, selected: null, correct: null, teamCount: 2, scores: [0, 0], countdown: 'off', customSeconds: 15, timeLeft: null, missed: [], done: false },
+    printOpen: false,
+    bingoPrintOpen: false,
+    sets: [
+      {
+        id: 'set-food', name: 'Everyday Food & Drink (CEFR A1–A2)', carouselSpeed: 4,
+        theme: '', gradeLevel: '', tags: [], ttsVoice: 'us',
+        positions: {}, cardScale: {}, printBlanks: {}, printMode: 'manual', printRandomPercent: 30,
+        words: [
+          { id: 'w1', text: 'bread', gloss: 'el pan', tier: 'key' },
+          { id: 'w2', text: 'water', gloss: 'el agua', tier: 'key' },
+          { id: 'w3', text: 'apple', gloss: 'la manzana', tier: 'key' },
+          { id: 'w4', text: 'rice', gloss: 'el arroz', tier: 'key' },
+          { id: 'w5', text: 'chicken', gloss: 'el pollo', tier: 'key' },
+          { id: 'w6', text: 'breakfast', gloss: 'el desayuno', tier: 'key' },
+          { id: 'w7', text: 'cheese', gloss: 'el queso', tier: 'normal' },
+          { id: 'w8', text: 'egg', gloss: 'el huevo', tier: 'normal' },
+          { id: 'w9', text: 'fish', gloss: 'el pescado', tier: 'normal' },
+          { id: 'w10', text: 'milk', gloss: 'la leche', tier: 'normal' },
+          { id: 'w11', text: 'soup', gloss: 'la sopa', tier: 'normal' },
+          { id: 'w12', text: 'spoon', gloss: 'la cuchara', tier: 'normal' },
+          { id: 'w13', text: 'plate', gloss: 'el plato', tier: 'normal' },
+          { id: 'w14', text: 'recipe', gloss: 'la receta', tier: 'bonus' },
+          { id: 'w15', text: 'ingredient', gloss: 'el ingrediente', tier: 'bonus' },
+          { id: 'w16', text: 'leftovers', gloss: 'las sobras', tier: 'bonus' },
+          { id: 'w17', text: 'appetite', gloss: 'el apetito', tier: 'bonus' },
+        ],
+      },
+      {
+        id: 'set-travel', name: 'Travel & Transport (CEFR A2)', carouselSpeed: 4,
+        theme: '', gradeLevel: '', tags: [], ttsVoice: 'us',
+        positions: {}, cardScale: {}, printBlanks: {}, printMode: 'manual', printRandomPercent: 30,
+        words: [
+          { id: 't1', text: 'airport', gloss: 'el aeropuerto', tier: 'key' },
+          { id: 't2', text: 'ticket', gloss: 'el billete', tier: 'key' },
+          { id: 't3', text: 'passport', gloss: 'el pasaporte', tier: 'key' },
+          { id: 't4', text: 'luggage', gloss: 'el equipaje', tier: 'key' },
+          { id: 't5', text: 'train', gloss: 'el tren', tier: 'normal' },
+          { id: 't6', text: 'taxi', gloss: 'el taxi', tier: 'normal' },
+          { id: 't7', text: 'hotel', gloss: 'el hotel', tier: 'normal' },
+          { id: 't8', text: 'map', gloss: 'el mapa', tier: 'normal' },
+          { id: 't9', text: 'suitcase', gloss: 'la maleta', tier: 'normal' },
+          { id: 't10', text: 'itinerary', gloss: 'el itinerario', tier: 'bonus' },
+          { id: 't11', text: 'layover', gloss: 'la escala', tier: 'bonus' },
+          { id: 't12', text: 'customs', gloss: 'la aduana', tier: 'bonus' },
+        ],
+      },
+    ],
+  };
+
+  componentDidMount() {
+    try {
+      const raw = localStorage.getItem('vocabwall_v3');
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && data.sets && data.sets.length) {
+          this.setState({ sets: data.sets, currentSetId: data.currentSetId || data.sets[0].id });
+        }
+      }
+    } catch (e) {}
+    this._keyHandler = (e) => this.handleKey(e);
+    window.addEventListener('keydown', this._keyHandler);
+    this.generateFloatingWords();
+  }
+  generateFloatingWords() {
+    const rainbow = ['#E4572E', '#F0AC3D', '#72C93A', '#3FA6A0', '#4C6FD6', '#8B5FBF', '#D6488F', '#2FA8D5'];
+    const pool = [];
+    this.state.sets.forEach(set => set.words.forEach(w => pool.push(w.text)));
+    if (!pool.length) return;
+    const box = this._homeContainerEl;
+    const vw = (box ? box.clientWidth : window.innerWidth) || 1200, vh = (box ? box.clientHeight : window.innerHeight) || 800;
+    const count = 20;
+    const floatingWords = [];
+    this._floatPhys = [];
+    const minSpawnDist = Math.min(vw, vh) / 5;
+    for (let i = 0; i < count; i++) {
+      const text = pool[Math.floor(Math.random() * pool.length)];
+      let x, y, tries = 0, ok = false;
+      while (!ok && tries < 40) {
+        x = Math.random() * vw; y = Math.random() * vh; tries++;
+        ok = this._floatPhys.every(p => Math.hypot(p.x - x, p.y - y) >= minSpawnDist);
+      }
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (this.props.floatSpeed ?? 45) / 60;
+      this._floatPhys.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, w: 0, h: 0, measured: false });
+      floatingWords.push({
+        key: i, text,
+        color: rainbow[Math.floor(Math.random() * rainbow.length)],
+        opacity: (0.3 + Math.random() * 0.1).toFixed(2),
+        fontSize: (16 + Math.random() * 34) + 'px',
+      });
+    }
+    this._floatEls = new Array(count);
+    this.setState({ floatingWords });
+    this.startFloatLoop();
+  }
+  startFloatLoop() {
+    if (this._floatRaf) return;
+    const step = () => { this.tickFloat(); this._floatRaf = requestAnimationFrame(step); };
+    this._floatRaf = requestAnimationFrame(step);
+  }
+  tickFloat() {
+    if (this.state.view !== 'home') return;
+    const els = this._floatEls || [], phys = this._floatPhys || [];
+    const box = this._homeContainerEl;
+    const vw = box ? box.clientWidth : window.innerWidth, vh = box ? box.clientHeight : window.innerHeight;
+    for (let i = 0; i < els.length; i++) {
+      const el = els[i], p = phys[i];
+      if (!el || !p) continue;
+      if (!p.measured) { p.w = el.offsetWidth || 100; p.h = el.offsetHeight || 40; p.measured = true; }
+      p.x += p.vx; p.y += p.vy;
+      if (p.x <= 0) { p.x = 0; p.vx = Math.abs(p.vx); }
+      else if (p.x + p.w >= vw) { p.x = vw - p.w; p.vx = -Math.abs(p.vx); }
+      if (p.y <= 0) { p.y = 0; p.vy = Math.abs(p.vy); }
+      else if (p.y + p.h >= vh) { p.y = vh - p.h; p.vy = -Math.abs(p.vy); }
+    }
+    this.separatePhys(phys, vw, vh);
+    for (let i = 0; i < els.length; i++) {
+      const el = els[i], p = phys[i];
+      if (!el || !p) continue;
+      el.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px)';
+    }
+  }
+  separatePhys(phys, vw, vh) {
+    const n = phys.length;
+    for (let pass = 0; pass < 14; pass++) {
+      let moved = false;
+      for (let i = 0; i < n; i++) {
+        const p = phys[i]; if (!p || !p.measured) continue;
+        for (let j = i + 1; j < n; j++) {
+          const q = phys[j]; if (!q || !q.measured) continue;
+          const pcx = p.x + p.w / 2, pcy = p.y + p.h / 2;
+          const qcx = q.x + q.w / 2, qcy = q.y + q.h / 2;
+          let dx = pcx - qcx, dy = pcy - qcy;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          const minDist = Math.max(p.w, q.w) / 2 + Math.max(p.h, q.h) / 2 + 20;
+          if (dist < minDist) {
+            moved = true;
+            if (dist < 0.01) { dx = (Math.random() - 0.5) || 0.1; dy = (Math.random() - 0.5) || 0.1; dist = Math.sqrt(dx * dx + dy * dy); }
+            const push = (minDist - dist) * 0.65;
+            const ux = dx / dist, uy = dy / dist;
+            p.x = Math.max(0, Math.min(vw - p.w, p.x + ux * push));
+            p.y = Math.max(0, Math.min(vh - p.h, p.y + uy * push));
+            q.x = Math.max(0, Math.min(vw - q.w, q.x - ux * push));
+            q.y = Math.max(0, Math.min(vh - q.h, q.y - uy * push));
+          }
+        }
+      }
+      if (!moved) break;
+    }
+  }
+  deflectFromSafeZone(p, rect) {
+    const wx1 = p.x, wx2 = p.x + p.w, wy1 = p.y, wy2 = p.y + p.h;
+    const rx1 = rect.x, rx2 = rect.x + rect.w, ry1 = rect.y, ry2 = rect.y + rect.h;
+    const overlapX = Math.min(wx2, rx2) - Math.max(wx1, rx1);
+    const overlapY = Math.min(wy2, ry2) - Math.max(wy1, ry1);
+    if (overlapX > 0 && overlapY > 0) {
+      if (overlapX < overlapY) {
+        if (wx1 + p.w / 2 < rx1 + rect.w / 2) { p.x -= overlapX; p.vx = -Math.abs(p.vx); }
+        else { p.x += overlapX; p.vx = Math.abs(p.vx); }
+      } else {
+        if (wy1 + p.h / 2 < ry1 + rect.h / 2) { p.y -= overlapY; p.vy = -Math.abs(p.vy); }
+        else { p.y += overlapY; p.vy = Math.abs(p.vy); }
+      }
+    }
+  }
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this._keyHandler);
+    if (this._timer) clearInterval(this._timer);
+    if (this._floatRaf) cancelAnimationFrame(this._floatRaf);
+    this.stopGridFloat();
+    if (this._quizTimer) clearInterval(this._quizTimer);
+  }
+
+  shuffle(arr) { return arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]); }
+  cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  getCurrentSet(sets) { sets = sets || this.state.sets; return sets.find(s => s.id === this.state.currentSetId) || sets[0]; }
+  persist() { try { localStorage.setItem('vocabwall_v3', JSON.stringify({ sets: this.state.sets, currentSetId: this.state.currentSetId })); } catch (e) {} }
+  mutateSets(updater, cb) { this.setState(s => ({ sets: updater(s.sets) }), () => { this.persist(); if (cb) cb(); }); }
+
+  handleKey(e) {
+    if (e.key === 'Escape') {
+      if (this.state.bingoPrintOpen) { this.setState({ bingoPrintOpen: false }); return; }
+      if (this.state.printOpen) { this.setState({ printOpen: false }); return; }
+      if (this.state.presenterMode) { this.setState({ presenterMode: false }); return; }
+    }
+    if (this.state.view !== 'display' || this.state.displayMode !== 'carousel') return;
+    if (e.key === 'ArrowRight') this.carouselNext();
+    else if (e.key === 'ArrowLeft') this.carouselPrev();
+    else if (e.key === ' ') { e.preventDefault(); this.togglePlay(); }
+  }
+
+  segControl(label, name, pairs, current, onPick) {
+    return {
+      label, name, isSeg: true, isNumber: false,
+      options: pairs.map(p => ({ label: p[1], active: p[0] === current, segStyle: this.segStyle(p[0] === current), onClick: () => onPick(p[0]) })),
+    };
+  }
+  segStyle(active) {
+    return active
+      ? 'padding:9px 16px;border-radius:999px;background:#ffffff;color:#1A3260;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 2px 6px rgba(26,50,96,0.12)'
+      : 'padding:9px 16px;border-radius:999px;background:transparent;color:#6B7686;font-weight:700;font-size:14px;cursor:pointer';
+  }
+
+  // --- audio (TTS via Web Speech API stands in for real recorded/TTS audio) ---
+  speak(text, voicePref) {
+    try {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices() || [];
+      const want = voicePref === 'uk' ? 'en-GB' : 'en-US';
+      const v = voices.find(v => v.lang === want) || voices.find(v => v.lang && v.lang.startsWith('en'));
+      if (v) u.voice = v;
+      u.rate = 0.9;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  speakWord(word) { this.speak(word.text, this.getCurrentSet().ttsVoice); }
+  toggleRecorded(id) { this.updateWordField(id, 'audioRecorded', !this.getCurrentSet().words.find(w => w.id === id).audioRecorded); }
+  setSetVoice(voice) { this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, ttsVoice: voice } : s)); }
+  setSetTheme(e) { const val = e.target.value; this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, theme: val } : s)); }
+  setSetGrade(e) { const val = e.target.value; this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, gradeLevel: val } : s)); }
+  setSetTags(e) { const val = e.target.value; const tags = val.split(',').map(t => t.trim()).filter(Boolean); this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, tags } : s)); }
+  setLibrarySearch(e) { this.setState({ librarySearch: e.target.value }); }
+
+  // --- undo toast (replaces destructive confirm dialogs) ---
+  showUndoToast(message, restoreFn) {
+    if (this._toastTimer) clearTimeout(this._toastTimer);
+    this._pendingUndo = restoreFn;
+    this.setState({ toast: message });
+    this._toastTimer = setTimeout(() => { this._pendingUndo = null; this.setState({ toast: null }); }, 6000);
+  }
+  undoToast() {
+    if (this._toastTimer) clearTimeout(this._toastTimer);
+    if (this._pendingUndo) this._pendingUndo();
+    this._pendingUndo = null;
+    this.setState({ toast: null });
+  }
+  dismissToast() { if (this._toastTimer) clearTimeout(this._toastTimer); this._pendingUndo = null; this.setState({ toast: null }); }
+
+
+  // --- missing word ---
+  removeOneWord() {
+    const set = this.getCurrentSet();
+    const remaining = set.words.map(w => w.id).filter(id => !this.state.missingWord.history.includes(id));
+    const pool = remaining.length ? remaining : set.words.map(w => w.id);
+    const history = remaining.length ? this.state.missingWord.history : [];
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    this.setState({ missingWord: { removedId: pick, revealed: false, history: [...history, pick] } });
+  }
+  revealMissing() { this.setState(s => ({ missingWord: { ...s.missingWord, revealed: true } })); }
+
+  // --- flyswatter ---
+  markFlyswatterWord(wordId) { this.setState(s => ({ flyswatter: { ...s.flyswatter, lastWordId: wordId } })); }
+  addFlyswatterScore(team) { this.setState(s => ({ flyswatter: { ...s.flyswatter, [team]: s.flyswatter[team] + 1 } })); }
+
+  // --- bingo worksheet maker ---
+  // --- shared puzzle cache: pure builds keyed by content signature + shuffle salt ---
+  sheetData(key, builder) {
+    this._sheetCache = this._sheetCache || {};
+    if (!(key in this._sheetCache)) this._sheetCache[key] = builder();
+    return this._sheetCache[key];
+  }
+  saltOf(kind) { return (this._salt && this._salt[kind]) || 0; }
+  reshuffleSheet(kind) {
+    this._salt = this._salt || {};
+    this._salt[kind] = this.saltOf(kind) + 1;
+    this.forceUpdate();
+  }
+  wordSig(words) { return words.map(w => w.id + ':' + w.text).join('|'); }
+
+  buildBingoGrid(words, sizeOverride, allowRepeat) {
+    const n = words.length;
+    let size = (sizeOverride && sizeOverride !== 'auto') ? parseInt(sizeOverride, 10) : (n >= 24 ? 5 : n >= 15 ? 4 : n >= 8 ? 3 : 2);
+    const hasFree = size % 2 === 1;
+    const total = size * size - (hasFree ? 1 : 0);
+    const ids = words.map(w => w.id);
+    let pool = [];
+    if (ids.length >= total) pool = this.shuffle(ids).slice(0, total);
+    else if (allowRepeat) { while (pool.length < total) pool = pool.concat(this.shuffle(ids)); pool = pool.slice(0, total); }
+    else { pool = this.shuffle(ids); while (pool.length < total) pool.push(null); pool = this.shuffle(pool); }
+    const grid = []; let pi = 0;
+    const mid = Math.floor((size * size) / 2);
+    for (let i = 0; i < size * size; i++) {
+      if (hasFree && i === mid) grid.push({ free: true });
+      else { grid.push(pool[pi] ? { id: pool[pi] } : { blank: true }); pi++; }
+    }
+    return { size, cells: grid };
+  }
+  buildBingoCardsArray(words, count, gridSize, allowRepeat) {
+    const cards = [];
+    for (let i = 0; i < count; i++) cards.push(this.buildBingoGrid(words, gridSize, allowRepeat));
+    return cards;
+  }
+  setBingoCount(e) {
+    const val = Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 1));
+    this.setState(s => ({ bingo: { ...s.bingo, count: val } }));
+  }
+  setBingoGridSize(val) { this.setState(s => ({ bingo: { ...s.bingo, gridSize: val } })); }
+  setBingoPerPage(val) { this.setState(s => ({ bingo: { ...s.bingo, perPage: val } })); }
+  bingoColumnsForPerPage(n) { return { 1: 1, 2: 2, 4: 2, 6: 3 }[n] || 2; }
+  setBingoContent(val) { this.setState(s => ({ bingo: { ...s.bingo, content: val } })); }
+  setBingoAllowRepeat(val) { this.setState(s => ({ bingo: { ...s.bingo, allowRepeat: val } })); }
+
+  // --- flash cards ---
+  setFlashPerPage(n) { this.setState(s => ({ flash: { ...s.flash, perPage: n } })); }
+  setFlashContent(val) { this.setState(s => ({ flash: { ...s.flash, content: val } })); }
+  setFlashCutLines(val) { this.setState(s => ({ flash: { ...s.flash, cutLines: val } })); }
+  flashGeometry(perPage) { return { 1: { cols: 1, rows: 1 }, 2: { cols: 1, rows: 2 }, 4: { cols: 2, rows: 2 }, 6: { cols: 2, rows: 3 }, 8: { cols: 2, rows: 4 } }[perPage] || { cols: 2, rows: 2 }; }
+  flashCardStyle(cutLines, content) {
+    const border = cutLines ? '1px dashed #A9A292' : '1px solid transparent';
+    return 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px;box-sizing:border-box;overflow:hidden;border:' + border;
+  }
+  flashTextStyle(perPage, content) {
+    const size = perPage <= 2 ? 54 : perPage <= 4 ? 38 : perPage <= 6 ? 30 : 24;
+    return "font-family:'Baloo 2',sans-serif;font-weight:800;font-size:" + size + 'px;line-height:1.1;text-align:center;color:#1A3260';
+  }
+
+  // --- word search ---
+  setSearchSize(val) { this.setState(s => ({ wordsearch: { ...s.wordsearch, size: parseInt(val, 10) } })); }
+  setSearchDiagonals(val) { this.setState(s => ({ wordsearch: { ...s.wordsearch, diagonals: val } })); }
+  setSearchBackwards(val) { this.setState(s => ({ wordsearch: { ...s.wordsearch, backwards: val } })); }
+  setSearchAnswerKey(val) { this.setState(s => ({ wordsearch: { ...s.wordsearch, answerKey: val } })); }
+  cleanWord(t) { return (t || '').toUpperCase().replace(/[^A-Z]/g, ''); }
+  buildWordSearch(words, size, diagonals, backwards) {
+    const uniq = [];
+    words.forEach(w => { const t = this.cleanWord(w.text); if (t.length > 1 && uniq.indexOf(t) === -1) uniq.push(t); });
+    uniq.sort((a, b) => b.length - a.length);
+    let dirs = [[1, 0], [0, 1]];
+    if (diagonals) dirs = dirs.concat([[1, 1], [1, -1]]);
+    if (backwards) dirs = dirs.concat(dirs.map(d => [-d[0], -d[1]]));
+    const grid = []; for (let r = 0; r < size; r++) grid.push(new Array(size).fill(null));
+    const placed = [], unplaced = [];
+    uniq.forEach(word => {
+      if (word.length > size) { unplaced.push(word); return; }
+      let done = false;
+      for (let a = 0; a < 500 && !done; a++) {
+        const d = dirs[Math.floor(Math.random() * dirs.length)];
+        const r = Math.floor(Math.random() * size), c = Math.floor(Math.random() * size);
+        const er = r + d[1] * (word.length - 1), ec = c + d[0] * (word.length - 1);
+        if (er < 0 || er >= size || ec < 0 || ec >= size) continue;
+        let ok = true;
+        for (let i = 0; i < word.length && ok; i++) {
+          const cur = grid[r + d[1] * i][c + d[0] * i];
+          if (cur && cur !== word[i]) ok = false;
+        }
+        if (!ok) continue;
+        const cellIdx = [];
+        for (let i = 0; i < word.length; i++) {
+          const rr = r + d[1] * i, cc = c + d[0] * i;
+          grid[rr][cc] = word[i]; cellIdx.push(rr * size + cc);
+        }
+        placed.push({ word, cellIdx }); done = true;
+      }
+      if (!done) unplaced.push(word);
+    });
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const inWord = {};
+    placed.forEach(p => p.cellIdx.forEach(i => { inWord[i] = true; }));
+    const cells = [];
+    for (let i = 0; i < size * size; i++) {
+      const r = Math.floor(i / size), c = i % size;
+      cells.push({ ch: grid[r][c] || alphabet[Math.floor(Math.random() * 26)], inWord: !!inWord[i] });
+    }
+    return { size, cells, bank: placed.map(p => p.word).sort(), unplaced };
+  }
+
+  // --- crossword ---
+  setCrossAnswerKey(val) { this.setState(s => ({ crossword: { ...s.crossword, answerKey: val } })); }
+  buildCrossword(words) {
+    const entries = [], seen = {};
+    words.forEach(w => {
+      const t = this.cleanWord(w.text);
+      if (t.length > 1 && !seen[t]) { seen[t] = true; entries.push({ word: t, clue: (w.clue || '').trim() }); }
+    });
+    entries.sort((a, b) => (b.word.length - a.word.length) || (Math.random() - 0.5));
+    const map = {}, placed = [], unplaced = [];
+    const key = (r, c) => r + ',' + c;
+    const canPlace = (word, r, c, horiz) => {
+      if (map[horiz ? key(r, c - 1) : key(r - 1, c)]) return -1;
+      if (map[horiz ? key(r, c + word.length) : key(r + word.length, c)]) return -1;
+      let touches = 0;
+      for (let i = 0; i < word.length; i++) {
+        const rr = horiz ? r : r + i, cc = horiz ? c + i : c;
+        const cur = map[key(rr, cc)];
+        if (cur) { if (cur !== word[i]) return -1; touches++; }
+        else if (horiz ? (map[key(rr - 1, cc)] || map[key(rr + 1, cc)]) : (map[key(rr, cc - 1)] || map[key(rr, cc + 1)])) return -1;
+      }
+      return touches;
+    };
+    const put = (e, r, c, horiz) => {
+      for (let i = 0; i < e.word.length; i++) map[key(horiz ? r : r + i, horiz ? c + i : c)] = e.word[i];
+      placed.push({ word: e.word, clue: e.clue, r, c, horiz });
+    };
+    entries.forEach((e, idx) => {
+      if (!idx) { put(e, 0, 0, true); return; }
+      let best = null;
+      placed.forEach(p => {
+        for (let i = 0; i < p.word.length; i++) {
+          for (let j = 0; j < e.word.length; j++) {
+            if (p.word[i] !== e.word[j]) continue;
+            const horiz = !p.horiz;
+            const r = p.horiz ? p.r - j : p.r + i;
+            const c = p.horiz ? p.c + i : p.c - j;
+            const t = canPlace(e.word, r, c, horiz);
+            if (t > 0 && (!best || t > best.t || (t === best.t && Math.random() < 0.5))) best = { r, c, horiz, t };
+          }
+        }
+      });
+      if (best) put(e, best.r, best.c, best.horiz); else unplaced.push(e.word);
+    });
+    if (!placed.length) return { rows: 0, cols: 0, cells: [], across: [], down: [], unplaced };
+    let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
+    Object.keys(map).forEach(k => {
+      const parts = k.split(','), r = +parts[0], c = +parts[1];
+      minR = Math.min(minR, r); maxR = Math.max(maxR, r); minC = Math.min(minC, c); maxC = Math.max(maxC, c);
+    });
+    const rows = maxR - minR + 1, cols = maxC - minC + 1;
+    const norm = placed.map(p => ({ ...p, r: p.r - minR, c: p.c - minC })).sort((a, b) => (a.r - b.r) || (a.c - b.c));
+    let num = 0; const numAt = {};
+    norm.forEach(p => { const k = p.r + ',' + p.c; if (!numAt[k]) numAt[k] = ++num; p.num = numAt[k]; });
+    const cells = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      cells.push({ letter: map[key(r + minR, c + minC)] || null, num: numAt[r + ',' + c] || null });
+    }
+    const clue = p => p.clue || (p.word.length + ' letters');
+    return {
+      rows, cols, cells, unplaced,
+      across: norm.filter(p => p.horiz).sort((a, b) => a.num - b.num).map(p => ({ num: p.num, clue: clue(p), word: p.word })),
+      down: norm.filter(p => !p.horiz).sort((a, b) => a.num - b.num).map(p => ({ num: p.num, clue: clue(p), word: p.word })),
+    };
+  }
+
+  printSheet() {
+    document.body.setAttribute('data-print-mode', 'sheet');
+    const cleanup = () => { document.body.removeAttribute('data-print-mode'); window.removeEventListener('afterprint', cleanup); };
+    window.addEventListener('afterprint', cleanup);
+    window.print();
+  }
+  bingoCellStyle(kind, content) {
+    const free = kind === 'free', blank = kind === 'blank';
+    const bg = free ? '#FDEFD9' : blank ? '#FBF9F4' : '#ffffff';
+    const border = free ? '2px solid #F0AC3D' : blank ? '2px dashed #E2DDCE' : '2px solid #EDEAE0';
+    const color = free ? '#8A5A19' : '#1A3260';
+    const pad = content === 'imagesOnly' ? '2px' : content === 'imageWord' ? '3px' : '4px';
+    const gap = content === 'imagesOnly' ? '0' : content === 'imageWord' ? '1px' : '2px';
+    return 'aspect-ratio:1;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:800;border-radius:10px;background:' + bg + ';border:' + border + ';color:' + color + ';padding:' + pad + ';box-sizing:border-box;gap:' + gap;
+  }
+  bingoCellTextStyle(content) {
+    return content === 'imageWord'
+      ? 'flex:0 0 auto;width:100%;font-size:9px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'
+      : 'font-size:13px;line-height:1.2';
+  }
+  bingoCellImageStyle(content) { return 'flex:1 1 auto;width:100%;max-width:100%;min-width:0;min-height:0;max-height:100%'; }
+
+  tierStyle(tier, preset) {
+    const styles = {
+      card: {
+        key: { fontSize: '24px', fontWeight: 700, color: '#1A3260', fontFamily: "'Nunito',sans-serif" },
+        normal: { fontSize: '24px', fontWeight: 700, color: '#1A3260', fontFamily: "'Nunito',sans-serif" },
+        bonus: { fontSize: '24px', fontWeight: 700, color: '#5B6B85', fontFamily: "'Nunito',sans-serif" },
+      },
+      stylized: {
+        key: { fontSize: '38px', fontWeight: 800, color: '#1A3260', background: '#ffffff', padding: '24px 28px', borderRadius: '22px', boxShadow: '0 10px 24px rgba(63,166,160,0.35)', border: '2px solid #3FA6A0', transform: 'rotate(-2deg)', fontFamily: "'Baloo 2',sans-serif" },
+        normal: { fontSize: '25px', fontWeight: 700, color: '#1A3260', background: '#ffffff', padding: '18px 20px', borderRadius: '22px', boxShadow: '0 8px 18px rgba(63,166,160,0.3)', border: '2px solid #3FA6A0', transform: 'rotate(1.5deg)', fontFamily: "'Nunito',sans-serif" },
+        bonus: { fontSize: '18px', fontWeight: 600, color: '#1A3260', background: '#ffffff', padding: '10px 12px', borderRadius: '22px', border: '2px solid #3FA6A0', transform: 'rotate(-1.5deg)', opacity: 0.8, fontFamily: "'Nunito',sans-serif" },
+      },
+    };
+    return { textAlign: 'center', ...(styles[preset] || styles.card)[tier] };
+  }
+  boxSizeFor(showImage, showText) {
+    if (showImage && showText) return { w: 240, h: 260 };
+    if (showImage) return { w: 160, h: 160 };
+    return { w: 220, h: 90 };
+  }
+  contentBoxStyle(tier, preset, showImage, showText) {
+    const base = this.tierStyle(tier, preset);
+    if (preset !== 'card') return base;
+    const box = this.boxSizeFor(showImage, showText);
+    const sized = { ...base, width: box.w + 'px', height: box.h + 'px', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' };
+    if (showImage && showText) {
+      return { ...sized, background: '#ffffff', padding: '18px', borderRadius: '20px', border: '2px solid #3FA6A0', boxShadow: '0 6px 16px rgba(26,50,96,0.08)' };
+    }
+    return sized;
+  }
+  imgSizeFor(tier, preset) {
+    const map = { key: { card: 96, stylized: 140 }, normal: { card: 96, stylized: 100 }, bonus: { card: 96, stylized: 60 } };
+    return (map[tier][preset] || 90) + 'px';
+  }
+  autoLayout(showImage, showText) {
+    const containerEl = this._gridStaticContainerEl;
+    // conservative fallback before the container ref is measured, to avoid over-packing columns on first paint
+    const containerW = (containerEl && containerEl.clientWidth ? containerEl.clientWidth : 1000);
+    const box = this.boxSizeFor(showImage, showText);
+    const gap = 28, margin = 30;
+    const cols = Math.max(1, Math.floor((containerW - margin * 2 + gap) / (box.w + gap)));
+    return { cols, cellW: box.w + gap, cellH: box.h + gap, margin };
+  }
+  autoPos(i, layout) {
+    const col = i % layout.cols, row = Math.floor(i / layout.cols);
+    return { x: Math.round(layout.margin + col * layout.cellW), y: Math.round(layout.margin + row * layout.cellH) };
+  }
+
+  // navigation
+  goHome() { this.setState({ view: 'home' }, () => this.startFloatLoop()); }
+  goLibrary() { this.setState({ view: 'library' }); }
+  goEditor() { this.setState({ view: 'editor' }); }
+  goDisplay() { this.setState({ view: 'display' }); }
+  togglePresenter() { this.setState(s => ({ presenterMode: !s.presenterMode })); }
+  setMode(mode) {
+    if (mode === 'grid' && this.state.stylePreset === 'stylized') this.ensureGridFloatColors();
+    if (this._quizTimer) clearInterval(this._quizTimer);
+    this.setState({ displayMode: mode }, () => {
+      if (mode === 'quiz') this.initQuiz();
+      if (mode !== 'carousel') { this.setState({ carouselPlaying: false }); this.restartCarouselTimer(); }
+      this.syncGridFloat();
+    });
+  }
+  setStyle(preset) {
+    if (preset === 'stylized') this.ensureGridFloatColors();
+    this.setState(s => ({ stylePreset: preset, contentMode: preset === 'stylized' ? 'wordOnly' : s.contentMode }), () => this.syncGridFloat());
+  }
+  ensureGridFloatColors() {
+    const set = this.getCurrentSet();
+    this._gridFloatColors = this._gridFloatColors || {};
+    const palette = this.rainbow();
+    set.words.forEach(w => { if (!this._gridFloatColors[w.id]) this._gridFloatColors[w.id] = palette[Math.floor(Math.random() * palette.length)]; });
+  }
+  syncGridFloat() {
+    if (this.state.view === 'display' && this.state.displayMode === 'grid' && this.state.stylePreset === 'stylized') this.startGridFloat();
+    else this.stopGridFloat();
+  }
+  rainbow() { return ['#E4572E', '#F0AC3D', '#72C93A', '#3FA6A0', '#4C6FD6', '#8B5FBF', '#D6488F', '#2FA8D5']; }
+  startGridFloat() {
+    const set = this.getCurrentSet();
+    this._gridFloatPhys = this._gridFloatPhys || {};
+    this._gridFloatColors = this._gridFloatColors || {};
+    this._gridFloatEls = this._gridFloatEls || {};
+    const palette = this.rainbow();
+    const box = this._gridFloatContainerEl;
+    const bw = (box ? box.clientWidth : window.innerWidth) || 1200, bh = (box ? box.clientHeight : window.innerHeight) || 800;
+    set.words.forEach(w => {
+      if (!this._gridFloatPhys[w.id]) {
+        const x = Math.random() * Math.max(100, bw - 180);
+        const y = Math.random() * Math.max(100, bh - 100);
+        const angle = Math.random() * Math.PI * 2;
+        const speed = this.state.wallSpeed / 60;
+        this._gridFloatPhys[w.id] = { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, w: 0, h: 0, measured: false };
+      }
+      if (!this._gridFloatColors[w.id]) this._gridFloatColors[w.id] = palette[Math.floor(Math.random() * palette.length)];
+    });
+    if (this._gridRaf) return;
+    const step = () => { this.tickGridFloat(); this._gridRaf = requestAnimationFrame(step); };
+    this._gridRaf = requestAnimationFrame(step);
+  }
+  stopGridFloat() { if (this._gridRaf) { cancelAnimationFrame(this._gridRaf); this._gridRaf = null; } }
+  setWallSpeed(e) {
+    const val = Math.max(25, Math.min(75, parseInt(e.target.value, 10) || 45));
+    this.setState({ wallSpeed: val });
+    const target = val / 60;
+    const phys = this._gridFloatPhys || {};
+    Object.keys(phys).forEach(id => {
+      const p = phys[id];
+      const mag = Math.sqrt(p.vx * p.vx + p.vy * p.vy) || 1;
+      p.vx = (p.vx / mag) * target;
+      p.vy = (p.vy / mag) * target;
+    });
+  }
+  tickGridFloat() {
+    if (!(this.state.view === 'display' && this.state.displayMode === 'grid' && this.state.stylePreset === 'stylized')) return;
+    const box = this._gridFloatContainerEl;
+    const vw = box ? box.clientWidth : window.innerWidth, vh = box ? box.clientHeight : window.innerHeight - 76;
+    const phys = this._gridFloatPhys || {}, els = this._gridFloatEls || {};
+    Object.keys(phys).forEach(id => {
+      const el = els[id], p = phys[id];
+      if (!el) return;
+      if (!p.measured) { p.w = el.offsetWidth || 140; p.h = el.offsetHeight || 100; p.measured = true; }
+      p.x += p.vx; p.y += p.vy;
+      if (p.x <= 0) { p.x = 0; p.vx = Math.abs(p.vx); } else if (p.x + p.w >= vw) { p.x = vw - p.w; p.vx = -Math.abs(p.vx); }
+      if (p.y <= 0) { p.y = 0; p.vy = Math.abs(p.vy); } else if (p.y + p.h >= vh) { p.y = vh - p.h; p.vy = -Math.abs(p.vy); }
+      el.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px)';
+    });
+  }
+  tierStyleFloat(tier, color) {
+    const sizes = { key: '46px', normal: '30px', bonus: '20px' };
+    return { textAlign: 'center', fontFamily: "'Baloo 2',sans-serif", fontWeight: 800, color, fontSize: sizes[tier] || '28px', whiteSpace: 'nowrap' };
+  }
+  setContentMode(mode) { this.setState({ contentMode: mode }); }
+
+  // zoom (the wall)
+  setZoom(delta) { this.setState(s => ({ gridZoom: Math.max(0.25, Math.min(3, +(s.gridZoom + delta).toFixed(2))) })); }
+  zoomIn() { this.setZoom(0.1); }
+  zoomOut() { this.setZoom(-0.1); }
+  zoomReset() { this.setState({ gridZoom: 1 }); }
+
+  // library
+  openSet(id) {
+    if (this.state.displayMode === 'grid' && this.state.stylePreset === 'stylized') {
+      const set = this.state.sets.find(s => s.id === id);
+      if (set) { const palette = this.rainbow(); this._gridFloatColors = this._gridFloatColors || {}; set.words.forEach(w => { if (!this._gridFloatColors[w.id]) this._gridFloatColors[w.id] = palette[Math.floor(Math.random() * palette.length)]; }); }
+    }
+    this.setState({ currentSetId: id, view: 'display', carouselIndex: 0, selectedWordId: null }, () => this.syncGridFloat());
+  }
+  openEditor(id) { this.setState({ currentSetId: id, view: 'editor' }); }
+  createSet() {
+    const id = 'set-' + Date.now();
+    this.mutateSets(sets => [...sets, { id, name: 'New Word List', theme: '', gradeLevel: '', tags: [], ttsVoice: 'us', carouselSpeed: 4, positions: {}, cardScale: {}, printBlanks: {}, printMode: 'manual', printRandomPercent: 30, words: [] }],
+      () => this.setState({ currentSetId: id, view: 'editor' }));
+  }
+  duplicateSet(id) {
+    this.mutateSets(sets => {
+      const src = sets.find(s => s.id === id);
+      const stamp = Date.now();
+      const copy = { ...src, id: 'set-' + stamp, name: src.name + ' (Copy)', words: src.words.map((w, i) => ({ ...w, id: w.id + '-c' + stamp + '-' + i })) };
+      return [...sets, copy];
+    });
+  }
+  deleteSet(id) {
+    const snapshot = this.state.sets, prevCurrent = this.state.currentSetId;
+    this.mutateSets(sets => sets.filter(s => s.id !== id), () => {
+      if (this.state.currentSetId === id) {
+        const remaining = this.state.sets;
+        this.setState({ currentSetId: remaining[0] ? remaining[0].id : null });
+      }
+    });
+    this.showUndoToast('Word list deleted.', () => this.mutateSets(() => snapshot, () => this.setState({ currentSetId: prevCurrent })));
+  }
+
+  // editor
+  setSetName(e) { const val = e.target.value; this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, name: val } : s)); }
+  addWord() {
+    const id = 'w-' + Date.now();
+    this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, words: [...s.words, { id, text: 'new word', tier: 'normal' }] } : s));
+  }
+  removeWord(id) {
+    const snapshot = this.state.sets;
+    this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, words: s.words.filter(w => w.id !== id) } : s));
+    this.showUndoToast('Word deleted.', () => this.mutateSets(() => snapshot));
+  }
+  updateWordField(id, field, val) { this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, words: s.words.map(w => w.id === id ? { ...w, [field]: val } : w) } : s)); }
+  setWordTier(id, tier) { this.updateWordField(id, 'tier', tier); }
+  setWordColor(id, color) { this.updateWordField(id, 'color', color); }
+  buildTierOptions(word) {
+    return ['key', 'normal', 'bonus'].map(t => ({ t, active: word.tier === t, label: this.cap(t), segStyle: this.segStyle(word.tier === t), onClick: () => this.setWordTier(word.id, t) }));
+  }
+
+  // grid drag/resize
+  startDrag(e, wordId) {
+    e.stopPropagation(); e.preventDefault();
+    const set = this.getCurrentSet();
+    const idx = set.words.findIndex(w => w.id === wordId);
+    const showImage = this.state.contentMode !== 'wordOnly', showText = this.state.contentMode !== 'imageOnly';
+    const layout = this.autoLayout(showImage, showText);
+    const pos = (set.positions && set.positions[wordId]) || this.autoPos(idx, layout);
+    this.setState({ selectedWordId: wordId, dragging: { wordId, startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y } });
+  }
+  startResize(e, wordId) {
+    e.stopPropagation(); e.preventDefault();
+    const set = this.getCurrentSet();
+    const scale = (set.cardScale && set.cardScale[wordId]) || 1;
+    this.setState({ selectedWordId: wordId, resizing: { wordId, startX: e.clientX, startY: e.clientY, startScale: scale } });
+  }
+  onGridMouseMove(e) {
+    const zoom = this.state.gridZoom || 1;
+    const d = this.state.dragging;
+    if (d) {
+      const dx = (e.clientX - d.startX) / zoom, dy = (e.clientY - d.startY) / zoom;
+      const nx = Math.max(0, d.origX + dx), ny = Math.max(0, d.origY + dy);
+      this.setState(s => ({ sets: s.sets.map(st => st.id === s.currentSetId ? { ...st, positions: { ...st.positions, [d.wordId]: { x: nx, y: ny } } } : st) }));
+      return;
+    }
+    const r = this.state.resizing;
+    if (r) {
+      const delta = ((e.clientX - r.startX) + (e.clientY - r.startY)) / 2 / zoom;
+      const next = Math.max(0.3, Math.min(6, +(r.startScale + delta / 120).toFixed(2)));
+      this.setState(s => ({ sets: s.sets.map(st => st.id === s.currentSetId ? { ...st, cardScale: { ...st.cardScale, [r.wordId]: next } } : st) }));
+    }
+  }
+  onGridMouseUp() {
+    if (this.state.dragging || this.state.resizing) this.setState({ dragging: null, resizing: null }, () => this.persist());
+  }
+  onGridBackgroundClick(e) { if (e.target === e.currentTarget) this.setState({ selectedWordId: null }); }
+  resetGridLayout(sortMode) {
+    sortMode = sortMode || 'random';
+    const set = this.getCurrentSet();
+    let orderedIds;
+    if (sortMode === 'tier') {
+      const rank = { key: 0, normal: 1, bonus: 2 };
+      orderedIds = [...set.words].sort((a, b) => rank[a.tier] - rank[b.tier]).map(w => w.id);
+    } else if (sortMode === 'alpha') {
+      orderedIds = [...set.words].sort((a, b) => a.text.localeCompare(b.text)).map(w => w.id);
+    } else {
+      orderedIds = this.shuffle(set.words.map(w => w.id));
+    }
+    const showImage = this.state.contentMode !== 'wordOnly';
+    const showText = this.state.contentMode !== 'imageOnly';
+    const layout = this.autoLayout(showImage, showText);
+    const positions = {};
+    orderedIds.forEach((id, i) => { positions[id] = this.autoPos(i, layout); });
+    const cardScale = {}; set.words.forEach(w => { cardScale[w.id] = 1; });
+    this.mutateSets(sets => sets.map(s => s.id === set.id ? { ...s, positions, cardScale } : s));
+  }
+
+  // carousel
+  carouselNext() { this.setState(s => { const set = this.getCurrentSet(s.sets); if (!set.words.length) return null; return { carouselIndex: (s.carouselIndex + 1) % set.words.length }; }); }
+  carouselPrev() { this.setState(s => { const set = this.getCurrentSet(s.sets); if (!set.words.length) return null; return { carouselIndex: (s.carouselIndex - 1 + set.words.length) % set.words.length }; }); }
+  togglePlay() { this.setState(s => ({ carouselPlaying: !s.carouselPlaying }), () => this.restartCarouselTimer()); }
+  setSpeed(e) {
+    const val = Math.max(1, Math.min(60, parseInt(e.target.value, 10) || 4));
+    this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, carouselSpeed: val } : s), () => this.restartCarouselTimer());
+  }
+  restartCarouselTimer() {
+    if (this._timer) clearInterval(this._timer);
+    if (this.state.carouselPlaying) {
+      const set = this.getCurrentSet();
+      this._timer = setInterval(() => this.carouselNext(), (set.carouselSpeed || 4) * 1000);
+    }
+  }
+
+  // reveal
+  toggleReveal(wordId) {
+    this.setState(s => {
+      const cur = { ...(s.revealedBySet[s.currentSetId] || {}) };
+      cur[wordId] = !cur[wordId];
+      return { revealedBySet: { ...s.revealedBySet, [s.currentSetId]: cur } };
+    });
+  }
+  resetReveal() { this.setState(s => ({ revealedBySet: { ...s.revealedBySet, [s.currentSetId]: {} } })); }
+
+  // quiz
+  buildQuizOptions(targetId, words) {
+    const target = words.find(w => w.id === targetId);
+    const pool = words.filter(w => w.id !== targetId);
+    const distractors = this.shuffle(pool).slice(0, 3);
+    return this.shuffle([target, ...distractors]);
+  }
+  initQuiz() {
+    const set = this.getCurrentSet();
+    if (!set.words.length) return;
+    const order = this.shuffle(set.words.map(w => w.id));
+    const targetId = order[0];
+    const options = this.buildQuizOptions(targetId, set.words);
+    this.setState(s => ({ quiz: { order, pointer: 0, targetId, options, answered: false, selected: null, correct: null, teamCount: s.quiz.teamCount || 2, scores: new Array(s.quiz.teamCount || 2).fill(0), countdown: s.quiz.countdown || 'off', timeLeft: null, missed: [], done: false } }), () => this.startQuizCountdown());
+  }
+  setTeamCount(n) {
+    this.setState(s => ({ quiz: { ...s.quiz, teamCount: n, scores: new Array(n).fill(0).map((v, i) => s.quiz.scores[i] || 0) } }));
+  }
+  setCountdown(val) {
+    this.setState(s => ({ quiz: { ...s.quiz, countdown: val } }), () => this.startQuizCountdown());
+  }
+  setQuizCustomSeconds(e) {
+    const val = Math.max(3, Math.min(300, parseInt(e.target.value, 10) || 15));
+    this.setState(s => ({ quiz: { ...s.quiz, customSeconds: val } }), () => { if (this.state.quiz.countdown === 'custom') this.startQuizCountdown(); });
+  }
+  startQuizCountdown() {
+    if (this._quizTimer) clearInterval(this._quizTimer);
+    const secs = this.state.quiz.countdown === 'custom' ? (this.state.quiz.customSeconds || 15) : { '10': 10, '20': 20, '30': 30 }[this.state.quiz.countdown];
+    if (!secs || this.state.quiz.answered || this.state.quiz.done) { this.setState(s => ({ quiz: { ...s.quiz, timeLeft: null } })); return; }
+    this.setState(s => ({ quiz: { ...s.quiz, timeLeft: secs } }));
+    this._quizTimer = setInterval(() => {
+      this.setState(s => {
+        if (s.quiz.answered || s.quiz.done) return null;
+        const left = (s.quiz.timeLeft || 0) - 1;
+        if (left <= 0) {
+          clearInterval(this._quizTimer);
+          const target = this.getCurrentSet().words.find(w => w.id === s.quiz.targetId);
+          const missed = target && !s.quiz.missed.includes(target.id) ? [...s.quiz.missed, target.id] : s.quiz.missed;
+          return { quiz: { ...s.quiz, answered: true, selected: null, correct: false, timeLeft: 0, missed } };
+        }
+        return { quiz: { ...s.quiz, timeLeft: left } };
+      });
+    }, 1000);
+  }
+  answerQuiz(optId) {
+    if (this.state.quiz.answered) return;
+    if (this._quizTimer) clearInterval(this._quizTimer);
+    const correct = optId === this.state.quiz.targetId;
+    this.setState(s => {
+      const missed = correct ? s.quiz.missed : (s.quiz.missed.includes(s.quiz.targetId) ? s.quiz.missed : [...s.quiz.missed, s.quiz.targetId]);
+      return { quiz: { ...s.quiz, answered: true, selected: optId, correct, missed } };
+    });
+  }
+  addScore(teamIdx) { this.setState(s => { const scores = [...s.quiz.scores]; scores[teamIdx] = (scores[teamIdx] || 0) + 1; return { quiz: { ...s.quiz, scores } }; }); }
+  nextQuestion() {
+    const set = this.getCurrentSet();
+    this.setState(s => {
+      let pointer = s.quiz.pointer + 1, order = s.quiz.order;
+      if (pointer >= order.length) {
+        return { quiz: { ...s.quiz, done: true, timeLeft: null } };
+      }
+      const targetId = order[pointer];
+      const options = this.buildQuizOptions(targetId, set.words);
+      return { quiz: { ...s.quiz, pointer, order, targetId, options, answered: false, selected: null, correct: null } };
+    }, () => this.startQuizCountdown());
+  }
+  playQuizAgain() { this.initQuiz(); }
+  createReviewSetFromMissed() {
+    const set = this.getCurrentSet();
+    const missedWords = set.words.filter(w => this.state.quiz.missed.includes(w.id));
+    if (!missedWords.length) return;
+    const id = 'set-' + Date.now();
+    const newSet = { id, name: set.name + ' — Review', theme: set.theme, gradeLevel: set.gradeLevel, tags: set.tags, ttsVoice: set.ttsVoice, carouselSpeed: 4, positions: {}, cardScale: {}, printBlanks: {}, printMode: 'manual', printRandomPercent: 30, words: missedWords.map((w, i) => ({ ...w, id: w.id + '-rev-' + Date.now() + '-' + i })) };
+    this.mutateSets(sets => [...sets, newSet], () => this.setState({ currentSetId: id, view: 'library' }));
+  }
+
+  // print
+  openPrint() { this.setState({ printOpen: true }); }
+  closePrint() { this.setState({ printOpen: false }); }
+  doPrint() { window.print(); }
+  openBingoPrint() { this.setState({ bingoPrintOpen: true }); }
+  closeBingoPrint() { this.setState({ bingoPrintOpen: false }); }
+  togglePrintBlank(wordId) {
+    this.mutateSets(sets => sets.map(s => {
+      if (s.id !== this.state.currentSetId) return s;
+      const pb = { ...s.printBlanks }; pb[wordId] = !pb[wordId];
+      return { ...s, printBlanks: pb };
+    }));
+  }
+  setPrintMode(mode) { this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, printMode: mode } : s)); }
+  setPrintPercent(e) { const val = parseInt(e.target.value, 10); this.mutateSets(sets => sets.map(s => s.id === this.state.currentSetId ? { ...s, printRandomPercent: val } : s)); }
+  shuffleRandomBlanks() {
+    const set = this.getCurrentSet();
+    const n = Math.round((set.printRandomPercent / 100) * set.words.length);
+    const ids = this.shuffle(set.words.map(w => w.id)).slice(0, n);
+    const pb = {}; ids.forEach(id => pb[id] = true);
+    this.mutateSets(sets => sets.map(s => s.id === set.id ? { ...s, printBlanks: pb } : s));
+  }
+
+  renderVals() {
+    const s = this.state;
+    const currentSet = this.getCurrentSet(s.sets);
+    const words = currentSet.words;
+    const preset = s.stylePreset;
+
+    const modeLabels = { grid: 'Word Wall', carousel: 'Carousel', reveal: 'Reveal', quiz: 'Quiz', missing: 'Missing Word', flyswatter: 'Flyswatter', bingo: 'Bingo', flashcards: 'Flash Cards', wordsearch: 'Word Search', crossword: 'Crossword' };
+    const mkModeOpt = m => ({ key: m, label: modeLabels[m], active: s.displayMode === m, segStyle: this.segStyle(s.displayMode === m), onClick: () => this.setMode(m) });
+    const printModeOptions = ['flashcards', 'bingo', 'wordsearch', 'crossword'].map(mkModeOpt);
+    const playModeOptions = ['grid', 'carousel', 'reveal', 'quiz', 'missing', 'flyswatter'].map(mkModeOpt);
+    const styleLabels = { card: 'Plain', stylized: 'Stylized' };
+    const styleOptions = ['card', 'stylized'].map(p => ({ key: p, label: styleLabels[p], active: preset === p, segStyle: this.segStyle(preset === p), onClick: () => this.setStyle(p) }));
+    const contentModeOptions = [['both', 'Both'], ['wordOnly', 'Words'], ['imageOnly', 'Images']].map(([key, label]) => ({ key, label, active: s.contentMode === key, segStyle: this.segStyle(s.contentMode === key), onClick: () => this.setContentMode(key) }));
+    const showImage = s.contentMode !== 'wordOnly';
+    const showText = s.contentMode !== 'imageOnly';
+
+    const searchQ = (s.librarySearch || '').toLowerCase().trim();
+    const setCards = s.sets.filter(set => {
+      if (!searchQ) return true;
+      const hay = [set.name, set.theme || '', set.gradeLevel || '', ...(set.tags || [])].join(' ').toLowerCase();
+      return hay.includes(searchQ);
+    }).map(set => ({
+      id: set.id, name: set.name, countLabel: set.words.length + ' words',
+      theme: set.theme, tags: set.tags || [],
+      keyCount: set.words.filter(w => w.tier === 'key').length,
+      normalCount: set.words.filter(w => w.tier === 'normal').length,
+      bonusCount: set.words.filter(w => w.tier === 'bonus').length,
+      onOpen: () => this.openSet(set.id), onEdit: () => this.openEditor(set.id),
+      onDuplicate: () => this.duplicateSet(set.id), onDelete: () => this.deleteSet(set.id),
+    }));
+
+    const editWords = words.map(w => ({
+      id: w.id, slotId: 'slot-' + w.id, text: w.text, clue: w.clue || '',
+      onTextChange: (e) => this.updateWordField(w.id, 'text', e.target.value),
+      onClueChange: (e) => this.updateWordField(w.id, 'clue', e.target.value),
+      onDelete: () => this.removeWord(w.id),
+      onPlay: () => this.speakWord(w),
+      recorded: !!w.audioRecorded,
+      recordedBg: w.audioRecorded ? '#FDEFD9' : '#F1EFE7', recordedColor: w.audioRecorded ? '#7A4E14' : '#1A3260',
+      onToggleRecorded: () => this.toggleRecorded(w.id),
+      tierOptions: this.buildTierOptions(w),
+      colorSwatches: this.rainbow().map(c => ({
+        color: c, active: w.color === c,
+        style: 'width:22px;height:22px;border-radius:999px;background:' + c + ';border:' + (w.color === c ? '3px solid #1A3260' : '2px solid #ffffff') + ';box-shadow:0 0 0 1px #EDEAE0;cursor:pointer;padding:0',
+        onClick: () => this.setWordColor(w.id, w.color === c ? null : c),
+      })),
+    }));
+
+    const gridLayout = this.autoLayout(showImage, showText);
+    const gridWords = words.map((w, i) => {
+      const pos = (currentSet.positions && currentSet.positions[w.id]) || this.autoPos(i, gridLayout);
+      const rawScale = (currentSet.cardScale && currentSet.cardScale[w.id]) || 1;
+      const scale = Math.max(0.5, Math.min(2, rawScale));
+      return {
+        id: w.id, text: w.text, slotId: 'slot-' + w.id,
+        left: pos.x + 'px', top: pos.y + 'px', scale,
+        contentStyle: styleObjToCss(this.contentBoxStyle(w.tier, preset, showImage, showText)),
+        imgSize: this.imgSizeFor(w.tier, preset),
+        showImage, showText,
+        selected: s.selectedWordId === w.id,
+        onDragStart: (e) => this.startDrag(e, w.id),
+        onResizeStart: (e) => this.startResize(e, w.id),
+        setRef: (el) => { (this._gridStaticEls || (this._gridStaticEls = {}))[w.id] = el; },
+      };
+    });
+
+    const isStylizedFloat = s.displayMode === 'grid' && preset === 'stylized';
+    const floatColors = this._gridFloatColors || {};
+    const uniformOn = this.props.uniformWallColor === 'single';
+    const uniformColor = this.props.wallColor || '#3FA6A0';
+    const floatGridWords = words.map(w => ({
+      id: w.id, text: w.text, slotId: 'slot-' + w.id,
+      contentStyle: styleObjToCss(this.tierStyleFloat(w.tier, w.color || (uniformOn ? uniformColor : (floatColors[w.id] || '#3FA6A0')))),
+      imgSize: this.imgSizeFor(w.tier, 'stylized'),
+      showImage, showText,
+      setRef: (el) => { (this._gridFloatEls || (this._gridFloatEls = {}))[w.id] = el; },
+    }));
+
+    const carIdx = words.length ? s.carouselIndex % words.length : 0;
+    const carW = words[carIdx];
+    const carouselWord = carW ? {
+      slotId: 'slot-' + carW.id, text: carW.text, showImage, showText,
+      contentStyle: styleObjToCss(this.contentBoxStyle(carW.tier, preset, showImage, showText)),
+    } : { slotId: 'slot-none', text: '', showImage: true, showText: true, contentStyle: '' };
+
+    const revealSet = s.revealedBySet[s.currentSetId] || {};
+    const revealWords = words.map(w => ({
+      id: w.id, slotId: 'slot-' + w.id, text: w.text,
+      revealed: !!revealSet[w.id], hidden: !revealSet[w.id],
+      contentStyle: styleObjToCss(this.contentBoxStyle(w.tier, preset, true, true)),
+      onToggle: () => this.toggleReveal(w.id),
+    }));
+
+    const quiz = s.quiz;
+    const quizTarget = words.find(w => w.id === quiz.targetId);
+    const quizOptions = (quiz.options || []).map(o => {
+      let bg = '#ffffff', color = '#1A3260', border = '2px solid #EDEAE0';
+      if (quiz.answered) {
+        if (o.id === quiz.targetId) { bg = '#E1F3F1'; border = '2px solid #3FA6A0'; color = '#215E5A'; }
+        else if (o.id === quiz.selected) { bg = '#FDEFD9'; border = '2px solid #F0AC3D'; color = '#7A4E14'; }
+      }
+      return {
+        id: o.id, text: o.text,
+        style: 'padding:22px;font-size:24px;font-weight:800;border-radius:20px;cursor:pointer;background:' + bg + ';color:' + color + ';border:' + border + ";font-family:'Nunito',sans-serif",
+        onClick: () => this.answerQuiz(o.id),
+      };
+    });
+
+    const kind = s.displayMode;
+    const sig = this.wordSig(words);
+    const isSheetMode = ['bingo', 'flashcards', 'wordsearch', 'crossword'].indexOf(kind) >= 0;
+    const listName = currentSet.name || 'Word List';
+    const sheetPages = [];
+    let sheetControls = [], sheetKindLabel = '', sheetSummary = '', sheetWarning = '', sheetEditLabels = {};
+
+    if (kind === 'bingo') {
+      const b = s.bingo, perPage = b.perPage || 2, content = b.content || 'words';
+      const cards = this.sheetData('bingo|' + sig + '|' + b.count + '|' + b.gridSize + '|' + b.allowRepeat + '|' + this.saltOf('bingo'),
+        () => this.buildBingoCardsArray(words, b.count || 6, b.gridSize, b.allowRepeat));
+      const withImage = content === 'imageWord' || content === 'imagesOnly';
+      const cellText = content !== 'imagesOnly';
+      let blanks = 0;
+      const cardViews = cards.map(card => ({
+        size: card.size,
+        title: listName.toUpperCase() + ' · BINGO',
+        cells: card.cells.map(c => {
+          if (c.free) return { text: 'FREE', showImage: false, showText: true, style: this.bingoCellStyle('free', content), textStyle: this.bingoCellTextStyle(content) };
+          if (c.blank) { blanks++; return { text: '', showImage: false, showText: false, style: this.bingoCellStyle('blank', content), textStyle: this.bingoCellTextStyle(content) }; }
+          const w = words.find(x => x.id === c.id);
+          return { text: w ? w.text : '', showImage: withImage, showText: cellText, slotId: w ? 'slot-' + w.id : 'slot-none', style: this.bingoCellStyle('word', content), textStyle: this.bingoCellTextStyle(content), imageStyle: this.bingoCellImageStyle(content) };
+        }),
+      }));
+      const columns = this.bingoColumnsForPerPage(perPage);
+      for (let i = 0; i < cardViews.length; i += perPage) {
+        sheetPages.push({ isBingo: true, isFlash: false, isSearch: false, isCross: false, showNameLine: false, columns, cards: cardViews.slice(i, i + perPage), title: listName + ' — Bingo', subtitle: 'Page ' + (sheetPages.length + 1) });
+      }
+      sheetKindLabel = 'Bingo Cards';
+      sheetSummary = cardViews.length + ' cards · ' + sheetPages.length + ' page(s)';
+      if (blanks) sheetWarning = 'Not enough words to fill every square — empty squares left blank. Add words, choose a smaller grid, or allow repeats.';
+      sheetControls = [
+        { label: 'Cards', isSeg: false, isNumber: true, min: 1, max: 30, value: b.count || 6, onChange: (e) => this.setBingoCount(e) },
+        this.segControl('Grid', 'vw-bingosize', [['auto', 'Auto'], ['3', '3×3'], ['4', '4×4'], ['5', '5×5']], b.gridSize || 'auto', v => this.setBingoGridSize(v)),
+        this.segControl('Per page', 'vw-bingoperpage', [[1, '1'], [2, '2'], [4, '4'], [6, '6']], perPage, v => this.setBingoPerPage(v)),
+        this.segControl('Content', 'vw-bingocontent', [['words', 'Words'], ['imageWord', 'Words + Images'], ['imagesOnly', 'Images']], content, v => this.setBingoContent(v)),
+        this.segControl('Duplicates', 'vw-bingorepeat', [[false, 'One of each'], [true, 'Repeat to fill']], !!b.allowRepeat, v => this.setBingoAllowRepeat(v)),
+      ];
+    } else if (kind === 'flashcards') {
+      const f = s.flash, geo = this.flashGeometry(f.perPage), content = f.content || 'imageWord';
+      const showImg = content !== 'wordOnly', showTxt = content !== 'imageOnly';
+      const cardViews = words.map(w => ({
+        text: w.text, slotId: 'slot-' + w.id, showImage: showImg, showText: showTxt,
+        style: this.flashCardStyle(f.cutLines, content),
+        textStyle: this.flashTextStyle(f.perPage, content),
+        imageStyle: 'width:100%;max-width:100%;min-width:0;flex:1 1 auto;min-height:0;max-height:100%',
+      }));
+      for (let i = 0; i < cardViews.length; i += f.perPage) {
+        sheetPages.push({ isFlash: true, isBingo: false, isSearch: false, isCross: false, showNameLine: false, columns: geo.cols, rows: geo.rows, cards: cardViews.slice(i, i + f.perPage), title: listName + ' — Flash Cards', subtitle: 'Page ' + (sheetPages.length + 1) });
+      }
+      sheetKindLabel = 'Flash Cards';
+      sheetSummary = cardViews.length + ' cards · ' + sheetPages.length + ' page(s)';
+      sheetControls = [
+        this.segControl('Per page', 'vw-flashper', [[1, '1'], [2, '2'], [4, '4'], [6, '6'], [8, '8']], f.perPage, v => this.setFlashPerPage(v)),
+        this.segControl('Content', 'vw-flashcontent', [['imageWord', 'Word + Image'], ['wordOnly', 'Word'], ['imageOnly', 'Image']], content, v => this.setFlashContent(v)),
+        this.segControl('Cut guides', 'vw-flashcut', [[true, 'On'], [false, 'Off']], !!f.cutLines, v => this.setFlashCutLines(v)),
+      ];
+    } else if (kind === 'wordsearch') {
+      const ws = s.wordsearch;
+      const data = this.sheetData('ws|' + sig + '|' + ws.size + '|' + ws.diagonals + '|' + ws.backwards + '|' + this.saltOf('wordsearch'),
+        () => this.buildWordSearch(words, ws.size, ws.diagonals, ws.backwards));
+      const px = Math.floor(Math.min(46, 700 / Math.max(1, data.size)));
+      const mkPage = (isKey) => ({
+        isSearch: true, isBingo: false, isFlash: false, isCross: false, showNameLine: !isKey,
+        size: data.size, cellSize: px + 'px', bank: data.bank,
+        cells: data.cells.map(c => ({
+          ch: c.ch,
+          style: 'width:' + px + 'px;height:' + px + 'px;display:flex;align-items:center;justify-content:center;border:1px solid #EDEAE0;font-size:' + Math.round(px * 0.5) + "px;font-family:'Nunito',sans-serif;" + (isKey && c.inWord ? 'background:#E1F3F1;color:#215E5A;font-weight:800' : 'color:#1A3260;font-weight:700'),
+        })),
+        title: listName + ' — Word Search' + (isKey ? ' (Answer Key)' : ''),
+        subtitle: data.size + '×' + data.size + ' · ' + data.bank.length + ' words',
+      });
+      sheetPages.push(mkPage(false));
+      if (ws.answerKey) sheetPages.push(mkPage(true));
+      sheetKindLabel = 'Word Search';
+      sheetSummary = data.bank.length + ' words hidden · ' + sheetPages.length + ' page(s)';
+      if (data.unplaced.length) sheetWarning = "Didn't fit: " + data.unplaced.join(', ') + ' — try a bigger grid.';
+      sheetControls = [
+        this.segControl('Grid', 'vw-wssize', [[10, '10'], [12, '12'], [14, '14'], [16, '16'], [18, '18']], ws.size, v => this.setSearchSize(v)),
+        this.segControl('Diagonals', 'vw-wsdiag', [[true, 'On'], [false, 'Off']], !!ws.diagonals, v => this.setSearchDiagonals(v)),
+        this.segControl('Backwards', 'vw-wsback', [[true, 'On'], [false, 'Off']], !!ws.backwards, v => this.setSearchBackwards(v)),
+        this.segControl('Answer key', 'vw-wskey', [[true, 'Include'], [false, 'Skip']], !!ws.answerKey, v => this.setSearchAnswerKey(v)),
+      ];
+    } else if (kind === 'crossword') {
+      const cw = s.crossword;
+      const raw = this.sheetData('cw|' + sig + '|' + this.saltOf('crossword'), () => this.buildCrossword(words));
+      raw.across.forEach(e => { sheetEditLabels[e.word] = 'A' + e.num; });
+      raw.down.forEach(e => { sheetEditLabels[e.word] = 'D' + e.num; });
+      const px = raw.cols > 18 ? 26 : raw.cols > 14 ? 30 : 34;
+      // clues are read live from the word list so edits show up without re-laying out the grid
+      const liveClues = list => list.map(e => {
+        const w = words.find(x => this.cleanWord(x.text) === e.word);
+        const c = w && (w.clue || '').trim();
+        return { num: e.num, clue: c || (e.word.length + ' letters') };
+      });
+      const data = { ...raw, across: liveClues(raw.across), down: liveClues(raw.down) };
+      const mkPage = (isKey) => ({
+        isCross: true, isBingo: false, isFlash: false, isSearch: false, showNameLine: !isKey,
+        cols: data.cols, cellSize: px + 'px', across: data.across, down: data.down,
+        cells: data.cells.map(c => ({
+          hasNum: !!c.num, num: c.num || '', showLetter: !!(isKey && c.letter), letter: c.letter || '',
+          style: c.letter
+            ? 'position:relative;width:' + px + 'px;height:' + px + 'px;border:1.5px solid #1A3260;background:#ffffff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:' + Math.round(px * 0.5) + 'px;color:#1A3260'
+            : 'width:' + px + 'px;height:' + px + 'px',
+        })),
+        title: listName + ' — Crossword' + (isKey ? ' (Answer Key)' : ''),
+        subtitle: data.across.length + ' across · ' + data.down.length + ' down',
+      });
+      sheetPages.push(mkPage(false));
+      if (cw.answerKey) sheetPages.push(mkPage(true));
+      sheetKindLabel = 'Crossword';
+      sheetSummary = (data.across.length + data.down.length) + ' entries placed';
+      const noClues = words.filter(w => !(w.clue || '').trim()).length;
+      if (data.unplaced.length) sheetWarning = "Couldn't interlock: " + data.unplaced.join(', ') + '. Shuffle to try a different layout.';
+      else if (noClues) sheetWarning = noClues + ' word(s) have no clue yet — add clues in Edit Set so students have something to solve.';
+      sheetControls = [
+        this.segControl('Answer key', 'vw-cwkey', [[true, 'Include'], [false, 'Skip']], !!cw.answerKey, v => this.setCrossAnswerKey(v)),
+      ];
+    }
+
+    return {
+      showToolbar: !s.presenterMode && s.view !== 'home',
+      presenterMode: s.presenterMode, togglePresenter: () => this.togglePresenter(),
+      view: s.view, isHome: s.view === 'home', isLibrary: s.view === 'library', isEditor: s.view === 'editor', isDisplay: s.view === 'display',
+      goHome: () => this.goHome(), goLibrary: () => this.goLibrary(), goEditor: () => this.goEditor(), goDisplay: () => this.goDisplay(),
+      floatingWords: s.floatingWords.map((fw, i) => ({ ...fw, setRef: (el) => { (this._floatEls || (this._floatEls = []))[i] = el; } })),
+      setHomeContainerRef: (el) => { this._homeContainerEl = el; },
+      setGridFloatContainerRef: (el) => { this._gridFloatContainerEl = el; },
+      setGridStaticContainerRef: (el) => { this._gridStaticContainerEl = el; },
+      currentSet, printModeOptions, playModeOptions, styleOptions, contentModeOptions,
+      toast: s.toast, onUndoToast: () => this.undoToast(), onDismissToast: () => this.dismissToast(),
+      librarySearch: s.librarySearch, onLibrarySearchChange: (e) => this.setLibrarySearch(e),
+      setThemeVal: currentSet.theme || '', onSetThemeChange: (e) => this.setSetTheme(e),
+      setGradeVal: currentSet.gradeLevel || '', onSetGradeChange: (e) => this.setSetGrade(e),
+      setTagsVal: (currentSet.tags || []).join(', '), onSetTagsChange: (e) => this.setSetTags(e),
+      voiceOptions: [['us', 'US Voice'], ['uk', 'UK Voice']].map(([v, label]) => ({ v, label, active: currentSet.ttsVoice === v, segStyle: this.segStyle(currentSet.ttsVoice === v), onClick: () => this.setSetVoice(v) })),
+      showContentModeToggle: s.displayMode === 'grid' || s.displayMode === 'carousel',
+      showZoomControl: s.displayMode === 'grid' && !isStylizedFloat,
+      showResetLayout: s.displayMode === 'grid' && !isStylizedFloat,
+      onResetLayout: (e) => { if (e.target.value) this.resetGridLayout(e.target.value); e.target.value = ''; },
+      wallSpeed: s.wallSpeed, onWallSpeedChange: (e) => this.setWallSpeed(e),
+      isGridMode: s.displayMode === 'grid', isCarouselMode: s.displayMode === 'carousel',
+      isRevealMode: s.displayMode === 'reveal', isQuizMode: s.displayMode === 'quiz',
+      isStylizedFloat, isGridStatic: s.displayMode === 'grid' && !isStylizedFloat, floatGridWords,
+      displayModeLabel: this.cap(s.displayMode),
+
+      zoomLabel: Math.round(s.gridZoom * 100) + '%',
+      onZoomIn: () => this.zoomIn(), onZoomOut: () => this.zoomOut(), onZoomReset: () => this.zoomReset(),
+      zoomWrapStyle: 'transform:scale(' + s.gridZoom + ');transform-origin:0 0;position:relative;width:2600px;height:1800px',
+
+      onCreateSet: () => this.createSet(), setCards,
+
+      onSetNameChange: (e) => this.setSetName(e), onAddWord: () => this.addWord(), editWords,
+
+      gridWords, onGridMouseMove: (e) => this.onGridMouseMove(e), onGridMouseUp: () => this.onGridMouseUp(), onGridBackgroundClick: (e) => this.onGridBackgroundClick(e),
+
+      carouselWord, onCarouselPrev: () => this.carouselPrev(), onCarouselNext: () => this.carouselNext(),
+      onTogglePlay: () => this.togglePlay(), playIcon: s.carouselPlaying ? '❚❚' : '▶',
+      carouselSpeed: currentSet.carouselSpeed || 4, onSpeedChange: (e) => this.setSpeed(e),
+      carouselProgress: words.length ? (carIdx + 1) + ' / ' + words.length : '0 / 0',
+
+      revealWords, onResetReveal: () => this.resetReveal(),
+
+      isMissingMode: s.displayMode === 'missing',
+      missingWords: words.map(w => {
+        const isRemoved = s.missingWord.removedId === w.id && !s.missingWord.revealed;
+        return {
+          id: w.id, slotId: 'slot-' + w.id, text: w.text,
+          isRemoved, notRemoved: !isRemoved,
+          contentStyle: styleObjToCss(this.contentBoxStyle(w.tier, preset, true, true)),
+          imgSize: this.imgSizeFor(w.tier, preset),
+        };
+      }),
+      onRemoveOneWord: () => this.removeOneWord(), onRevealMissing: () => this.revealMissing(),
+      missingHasRemoved: !!s.missingWord.removedId && !s.missingWord.revealed,
+      missingButtonLabel: s.missingWord.removedId ? 'Remove Another' : 'Remove One',
+
+      isFlyswatterMode: s.displayMode === 'flyswatter',
+      flyswatterWords: words.map(w => {
+        const isLast = w.id === s.flyswatter.lastWordId;
+        return { id: w.id, text: w.text, slotId: 'slot-' + w.id, style: 'display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px;border-radius:18px;font-weight:800;font-size:18px;cursor:pointer;background:' + (isLast ? '#E1F3F1' : '#ffffff') + ';color:#1A3260;border:2px solid ' + (isLast ? '#3FA6A0' : '#EDEAE0'), onClick: () => this.markFlyswatterWord(w.id) };
+      }),
+      flyswatterScoreA: s.flyswatter.scoreA, flyswatterScoreB: s.flyswatter.scoreB,
+      onFlyswatterAddA: () => this.addFlyswatterScore('scoreA'),
+      onFlyswatterAddB: () => this.addFlyswatterScore('scoreB'),
+      flyswatterAwardDisabled: !s.flyswatter.lastWordId,
+
+      isSheetMode, sheetPages, sheetControls, sheetKindLabel, sheetSummary,
+      showClueColumn: kind === 'crossword',
+      sheetEditRows: words.map(w => {
+        const label = sheetEditLabels[this.cleanWord(w.text)] || '';
+        return {
+          id: w.id, text: w.text, clue: w.clue || '', label, showLabel: !!label,
+          labelStyle: 'flex:none;width:38px;text-align:center;font-size:12px;font-weight:800;padding:6px 0;border-radius:8px;background:' + (label.charAt(0) === 'A' ? '#E1F3F1' : '#FDEFD9') + ';color:' + (label.charAt(0) === 'A' ? '#215E5A' : '#7A4E14'),
+          onTextChange: (e) => this.updateWordField(w.id, 'text', e.target.value),
+          onClueChange: (e) => this.updateWordField(w.id, 'clue', e.target.value),
+          onDelete: () => this.removeWord(w.id),
+        };
+      }),
+      onAddSheetWord: () => this.addWord(),
+      sheetEditorOpen: !!s.sheetEditorOpen,
+      onToggleSheetEditor: () => this.setState(st => ({ sheetEditorOpen: !st.sheetEditorOpen })),
+      sheetEditorToggleLabel: s.sheetEditorOpen ? 'Hide Words' : 'Edit Words',
+      sheetZoom: Math.min(1, Math.max(0.35, ((s.sheetColW || 900) - 26) / 816)),
+      setSheetScrollRef: (el) => {
+        if (this._sheetScrollEl === el) return;
+        this._sheetScrollEl = el;
+        if (this._sheetRO) { this._sheetRO.disconnect(); this._sheetRO = null; }
+        if (!el || typeof ResizeObserver === 'undefined') return;
+        this._sheetRO = new ResizeObserver(() => {
+          const w = el.clientWidth;
+          if (w && Math.abs((this.state.sheetColW || 0) - w) > 1) this.setState({ sheetColW: w });
+        });
+        this._sheetRO.observe(el);
+      },
+      sheetWarning, showSheetWarning: !!sheetWarning,
+      showSheetShuffle: kind !== 'flashcards',
+      onRegenerateSheet: () => this.reshuffleSheet(kind),
+      onPrintSheet: () => this.printSheet(),
+      handoutBtnDisplay: isSheetMode ? 'none' : 'inline-flex',
+
+      quizProgress: words.length ? 'Question ' + (quiz.pointer + 1) + ' of ' + words.length : 'No words yet',
+      quizImageSlotId: quizTarget ? 'slot-' + quizTarget.id : 'slot-none', quizOptions,
+      quizPointDisabled: !quiz.answered, quizNextDisabled: !quiz.answered,
+      onNextQuestion: () => this.nextQuestion(),
+      quizDone: quiz.done, quizNotDone: !quiz.done,
+      quizMissedWordsLabel: words.filter(w => quiz.missed.includes(w.id)).map(w => w.text).join(', '),
+      quizTeamOptions: [2, 3, 4].map(n => ({ n, label: n + ' Teams', active: quiz.teamCount === n, segStyle: this.segStyle(quiz.teamCount === n), onClick: () => this.setTeamCount(n) })),
+      quizCountdownOptions: [['off', 'Off'], ['10', '10s'], ['20', '20s'], ['30', '30s'], ['custom', 'Custom']].map(([v, label]) => ({ v, label, active: quiz.countdown === v, segStyle: this.segStyle(quiz.countdown === v), onClick: () => this.setCountdown(v) })),
+      showQuizCustomInput: quiz.countdown === 'custom',
+      quizCustomSeconds: quiz.customSeconds || 15, onQuizCustomSecondsChange: (e) => this.setQuizCustomSeconds(e),
+      quizTimeLeft: quiz.timeLeft, showQuizTimer: quiz.timeLeft !== null && quiz.timeLeft !== undefined,
+      quizScoreboards: (['Team A', 'Team B', 'Team C', 'Team D']).slice(0, quiz.teamCount).map((name, i) => ({
+        name, score: quiz.scores[i] || 0, onAdd: () => this.addScore(i), disabled: !quiz.answered,
+      })),
+      quizMissedWords: words.filter(w => quiz.missed.includes(w.id)).map(w => w.text),
+      onPlayQuizAgain: () => this.playQuizAgain(),
+      onCreateReviewSet: () => this.createReviewSetFromMissed(),
+
+      printOpen: s.printOpen, openPrint: () => this.openPrint(), closePrint: () => this.closePrint(), doPrint: () => this.doPrint(),
+      printModeManual: currentSet.printMode !== 'random', printModeRandom: currentSet.printMode === 'random',
+      printManualSegStyle: this.segStyle(currentSet.printMode !== 'random'), printRandomSegStyle: this.segStyle(currentSet.printMode === 'random'),
+      setPrintModeManual: () => this.setPrintMode('manual'), setPrintModeRandom: () => this.setPrintMode('random'),
+      printPercent: currentSet.printRandomPercent || 30, onPercentChange: (e) => this.setPrintPercent(e),
+      onShuffleRandom: () => this.shuffleRandomBlanks(),
+      printItems: words.map(w => ({
+        id: w.id, text: w.text,
+        blanked: !!(currentSet.printBlanks && currentSet.printBlanks[w.id]),
+        notBlanked: !(currentSet.printBlanks && currentSet.printBlanks[w.id]),
+        onToggle: () => this.togglePrintBlank(w.id),
+      })),
+    };
+  }
+}
+
+function styleObjToCss(obj) {
+  return Object.keys(obj).map(k => k.replace(/[A-Z]/g, m => '-' + m.toLowerCase()) + ':' + obj[k]).join(';');
+}
+
+</script>
+</body>
+</html>
