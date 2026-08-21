@@ -5,6 +5,9 @@ dist-ssr
 .DS_Store
 .vite
 
+# TypeScript incremental-build cache (regenerated on every build)
+tsconfig.tsbuildinfo
+
 # Internal dev-routine notes — local only, not for the public repo
 memory.md
 TODO.md
