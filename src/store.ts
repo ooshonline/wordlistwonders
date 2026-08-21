@@ -109,6 +109,8 @@ export interface StoreActions {
   setSetTags: (v: string) => void;
   setSetVoice: (v: Voice) => void;
   addWord: () => void;
+  /** Bulk-append words parsed from a pasted blob (split on newlines / commas). */
+  addWords: (texts: string[]) => void;
   removeWord: (id: string) => void;
   updateWordField: (id: string, field: keyof Word, val: unknown) => void;
   setWordTier: (id: string, tier: Tier) => void;
@@ -444,6 +446,17 @@ export const useStore = create<Store>((set, get) => {
         sets.map((s) =>
           s.id === get().currentSetId ? { ...s, words: [...s.words, { id, text: 'new word', tier: 'normal' as Tier }] } : s,
         ),
+      );
+    },
+    addWords: (texts) => {
+      const stamp = Date.now();
+      const words = texts
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .map((text, i) => ({ id: `w-${stamp}-${i}`, text, tier: 'normal' as Tier }));
+      if (words.length === 0) return;
+      mutateSets((sets) =>
+        sets.map((s) => (s.id === get().currentSetId ? { ...s, words: [...s.words, ...words] } : s)),
       );
     },
     removeWord: (id) => {

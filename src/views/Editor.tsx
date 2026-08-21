@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useStore, currentSet } from '../store';
 import type { Tier, Voice } from '../types';
 import { C, DISPLAY, RAINBOW } from '../tokens';
@@ -19,6 +20,7 @@ export function Editor() {
   const setSetVoice = useStore((s) => s.setSetVoice);
   const goDisplay = useStore((s) => s.goDisplay);
   const addWord = useStore((s) => s.addWord);
+  const addWords = useStore((s) => s.addWords);
   const removeWord = useStore((s) => s.removeWord);
   const updateWordField = useStore((s) => s.updateWordField);
   const setWordTier = useStore((s) => s.setWordTier);
@@ -26,7 +28,22 @@ export function Editor() {
   const toggleRecorded = useStore((s) => s.toggleRecorded);
   const speakWord = useStore((s) => s.speakWord);
 
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState('');
+
   if (!set) return null;
+
+  // Split a pasted blob on newlines and commas into individual words.
+  const parsedWords = pasteText
+    .split(/[\n,]+/)
+    .map((t) => t.trim())
+    .filter(Boolean);
+
+  const handleAddPasted = () => {
+    addWords(parsedWords);
+    setPasteText('');
+    setPasteOpen(false);
+  };
 
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 32 }}>
@@ -170,22 +187,119 @@ export function Editor() {
             </button>
           </div>
         ))}
-        <button
-          type="button"
-          onClick={addWord}
-          style={{
-            padding: 14,
-            borderRadius: 16,
-            background: C.surface,
-            color: C.ink,
-            border: `2px dashed ${C.greenDashed}`,
-            fontWeight: 800,
-            fontSize: 15,
-            cursor: 'pointer',
-          }}
-        >
-          + Add Word
-        </button>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={addWord}
+            style={{
+              flex: 1,
+              minWidth: 200,
+              padding: 14,
+              borderRadius: 16,
+              background: C.surface,
+              color: C.ink,
+              border: `2px dashed ${C.greenDashed}`,
+              fontWeight: 800,
+              fontSize: 15,
+              cursor: 'pointer',
+            }}
+          >
+            + Add Word
+          </button>
+          <button
+            type="button"
+            onClick={() => setPasteOpen((v) => !v)}
+            aria-expanded={pasteOpen}
+            style={{
+              flex: 1,
+              minWidth: 200,
+              padding: 14,
+              borderRadius: 16,
+              background: C.surface,
+              color: C.ink,
+              border: `2px dashed ${C.borderLight}`,
+              fontWeight: 800,
+              fontSize: 15,
+              cursor: 'pointer',
+            }}
+          >
+            📋 Paste a List
+          </button>
+        </div>
+
+        {pasteOpen && (
+          <div
+            style={{
+              background: C.surface,
+              borderRadius: 18,
+              border: `1px solid ${C.borderLight}`,
+              padding: 16,
+              display: 'grid',
+              gap: 12,
+            }}
+          >
+            <label style={{ fontWeight: 700, fontSize: 14, color: C.ink }}>
+              Paste your words — one per line, or separated by commas. We'll add them all at once.
+            </label>
+            <textarea
+              value={pasteText}
+              onChange={(e) => setPasteText(e.target.value)}
+              autoFocus
+              placeholder={'apple\nbanana\ncherry\n\n…or: apple, banana, cherry'}
+              rows={6}
+              style={{
+                padding: '12px 14px',
+                borderRadius: 12,
+                border: `2px solid ${C.track}`,
+                fontWeight: 600,
+                fontSize: 14,
+                color: C.ink,
+                resize: 'vertical',
+                fontFamily: 'inherit',
+              }}
+            />
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={handleAddPasted}
+                disabled={parsedWords.length === 0}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: 12,
+                  background: parsedWords.length === 0 ? C.track : C.teal,
+                  color: parsedWords.length === 0 ? C.ink2 : '#ffffff',
+                  border: 'none',
+                  fontWeight: 800,
+                  fontSize: 14,
+                  cursor: parsedWords.length === 0 ? 'default' : 'pointer',
+                }}
+              >
+                {parsedWords.length === 0
+                  ? 'Add Words'
+                  : `Add ${parsedWords.length} ${parsedWords.length === 1 ? 'Word' : 'Words'}`}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPasteText('');
+                  setPasteOpen(false);
+                }}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: 12,
+                  background: C.track,
+                  color: C.ink,
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
