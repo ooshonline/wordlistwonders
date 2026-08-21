@@ -4,3 +4,7 @@ dist-ssr
 *.local
 .DS_Store
 .vite
+
+# Internal dev-routine notes — local only, not for the public repo
+memory.md
+TODO.md
