@@ -19,6 +19,9 @@ export function Library() {
     return hay.includes(q);
   });
 
+  const noSets = sets.length === 0;
+  const noMatches = !noSets && visible.length === 0;
+
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 32 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
@@ -27,21 +30,50 @@ export function Library() {
           + New Set
         </GreenButton>
       </div>
-      <input
-        value={librarySearch}
-        onChange={(e) => setLibrarySearch(e.target.value)}
-        placeholder="Search by name, theme, grade, or tag…"
-        style={{
-          width: '100%',
-          maxWidth: 420,
-          padding: '11px 16px',
-          borderRadius: 999,
-          border: `2px solid ${C.borderLight}`,
-          fontSize: 14,
-          color: C.ink,
-          marginBottom: 20,
-        }}
-      />
+
+      {/* Search is only useful once there's something to search. */}
+      {!noSets && (
+        <input
+          value={librarySearch}
+          onChange={(e) => setLibrarySearch(e.target.value)}
+          placeholder="Search by name, theme, grade, or tag…"
+          style={{
+            width: '100%',
+            maxWidth: 420,
+            padding: '11px 16px',
+            borderRadius: 999,
+            border: `2px solid ${C.borderLight}`,
+            fontSize: 14,
+            color: C.ink,
+            marginBottom: 20,
+          }}
+        />
+      )}
+
+      {noSets && (
+        <EmptyState
+          title="No word lists yet"
+          body="Start with one list of words — then turn it into four printable worksheets and six projector games in a click."
+          action={
+            <GreenButton onClick={createSet} style={{ fontSize: 15 }}>
+              + Create your first list
+            </GreenButton>
+          }
+        />
+      )}
+
+      {noMatches && (
+        <EmptyState
+          title="No lists match your search"
+          body={`Nothing here matches “${librarySearch.trim()}”. Try a different word, or clear the search to see all your lists.`}
+          action={
+            <button type="button" onClick={() => setLibrarySearch('')} style={clearBtn}>
+              Clear search
+            </button>
+          }
+        />
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(270px,1fr))', gap: 20 }}>
         {visible.map((set) => {
           const keyCount = set.words.filter((w) => w.tier === 'key').length;
@@ -99,6 +131,55 @@ export function Library() {
     </div>
   );
 }
+
+function EmptyState({ title, body, action }: { title: string; body: string; action: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        textAlign: 'center',
+        gap: 14,
+        maxWidth: 460,
+        margin: '48px auto',
+        padding: '40px 28px',
+        background: C.surface,
+        borderRadius: 24,
+        border: `2px dashed ${C.borderLight}`,
+      }}
+    >
+      <div
+        style={{
+          width: 72,
+          height: 72,
+          borderRadius: 20,
+          background: C.tealTint,
+          color: C.teal,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Icon path={icons.list} size={34} />
+      </div>
+      <div style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 700, color: C.ink }}>{title}</div>
+      <div style={{ fontSize: 15, color: C.ink2, lineHeight: 1.5 }}>{body}</div>
+      <div style={{ marginTop: 6 }}>{action}</div>
+    </div>
+  );
+}
+
+const clearBtn: React.CSSProperties = {
+  padding: '10px 18px',
+  borderRadius: 999,
+  background: C.surface,
+  color: C.ink,
+  border: `2px solid ${C.ink}`,
+  fontWeight: 700,
+  fontSize: 15,
+  cursor: 'pointer',
+};
 
 const pill = (bg: string, color: string) => ({
   background: bg,
