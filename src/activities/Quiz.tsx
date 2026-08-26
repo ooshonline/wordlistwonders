@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useStore, currentSet } from '../store';
 import type { QuizState } from '../store';
 import { C, DISPLAY } from '../tokens';
@@ -22,6 +23,30 @@ export function Quiz() {
   const quizTarget = words.find((w) => w.id === quiz.targetId);
   const missedWords = words.filter((w) => quiz.missed.includes(w.id));
   const scoreboards = TEAM_NAMES.slice(0, quiz.teamCount).map((name, i) => ({ name, score: quiz.scores[i] || 0, i }));
+
+  // Keyboard shortcuts for running the quiz from the projector without a mouse:
+  // number keys 1–4 pick an answer, Enter advances to the next word.
+  useEffect(() => {
+    if (quiz.done) return;
+    const onKey = (e: KeyboardEvent) => {
+      // Don't hijack typing in the settings inputs (e.g. custom seconds).
+      const el = document.activeElement;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) return;
+      const opts = quiz.options || [];
+      if (!quiz.answered && e.key >= '1' && e.key <= '9') {
+        const idx = parseInt(e.key, 10) - 1;
+        if (opts[idx]) {
+          e.preventDefault();
+          answerQuiz(opts[idx].id);
+        }
+      } else if (quiz.answered && e.key === 'Enter') {
+        e.preventDefault();
+        nextQuestion();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [quiz.done, quiz.answered, quiz.options, answerQuiz, nextQuestion]);
 
   return (
     <div
@@ -126,7 +151,7 @@ export function Quiz() {
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, width: '100%', maxWidth: 640 }}>
-            {(quiz.options || []).map((o) => {
+            {(quiz.options || []).map((o, i) => {
               let bg: string = '#ffffff';
               let color: string = C.ink;
               let border = `2px solid ${C.borderLight}`;
@@ -147,6 +172,7 @@ export function Quiz() {
                   type="button"
                   onClick={() => answerQuiz(o.id)}
                   style={{
+                    position: 'relative',
                     padding: 22,
                     fontSize: 24,
                     fontWeight: 800,
@@ -156,13 +182,41 @@ export function Quiz() {
                     color,
                     border,
                     fontFamily: "'Nunito', sans-serif",
+                    minWidth: 0,
                   }}
                 >
+                  {/* Number badge doubles as the keyboard-shortcut hint (press 1–4). */}
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      top: 10,
+                      left: 12,
+                      width: 26,
+                      height: 26,
+                      borderRadius: 8,
+                      background: C.track,
+                      color: C.ink2,
+                      fontSize: 14,
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {i + 1}
+                  </span>
                   {o.text}
                 </button>
               );
             })}
           </div>
+          {(quiz.options || []).length > 0 && (
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.ink2, opacity: 0.85, textAlign: 'center' }}>
+              Tip: press <kbd style={kbd}>1</kbd>–<kbd style={kbd}>{Math.min(9, (quiz.options || []).length)}</kbd> to
+              answer, <kbd style={kbd}>Enter</kbd> for the next word.
+            </div>
+          )}
           <div
             style={{
               display: 'flex',
@@ -223,6 +277,19 @@ export function Quiz() {
   );
 }
 
+const kbd: React.CSSProperties = {
+  display: 'inline-block',
+  minWidth: 20,
+  padding: '1px 6px',
+  borderRadius: 6,
+  background: C.surface,
+  border: `1px solid ${C.borderLight}`,
+  boxShadow: `0 1px 0 ${C.borderLight}`,
+  fontFamily: "'Nunito', sans-serif",
+  fontWeight: 800,
+  fontSize: 12,
+  color: C.ink,
+};
 const scoreCard: React.CSSProperties = {
   background: C.surface,
   borderRadius: 18,
