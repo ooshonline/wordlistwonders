@@ -49,6 +49,23 @@ input[type='range'] {
   }
 }
 
+/* Quiz countdown ring — gentle urgency pulse in the final quarter. */
+@keyframes vwTimerPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*='vwTimerPulse'] {
+    animation: none !important;
+  }
+}
+
 /* ── Print pipeline ─────────────────────────────────────────────────────────
    Screen and print share one DOM; print is driven by body[data-print-mode].
    Use `visibility`, not `display` — a display:none ancestor cascade would

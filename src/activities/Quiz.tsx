@@ -137,9 +137,14 @@ export function Quiz() {
             {words.length ? `Question ${quiz.pointer + 1} of ${words.length}` : 'No words yet'}
           </div>
           {quiz.timeLeft !== null && quiz.timeLeft !== undefined && (
-            <div style={{ fontFamily: DISPLAY, fontSize: 28, fontWeight: 800, color: C.amberBorder }}>
-              {quiz.timeLeft}s
-            </div>
+            <TimerRing
+              timeLeft={quiz.timeLeft}
+              total={
+                quiz.countdown === 'custom'
+                  ? quiz.customSeconds || 15
+                  : ({ '10': 10, '20': 20, '30': 30 } as Record<string, number>)[quiz.countdown] || 0
+              }
+            />
           )}
           <div style={{ width: 'min(320px,100%)', height: 220, maxHeight: '30vh' }}>
             <ImageSlot
@@ -273,6 +278,61 @@ export function Quiz() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+// A projector-friendly countdown ring: the arc shrinks as time runs out and
+// shifts color from calm teal → amber → red for at-a-glance urgency. Pure SVG,
+// no libraries. The arc/color transition smooths the once-a-second timeLeft tick.
+function TimerRing({ timeLeft, total }: { timeLeft: number; total: number }) {
+  const r = 42;
+  const circ = 2 * Math.PI * r;
+  const ratio = total > 0 ? Math.max(0, Math.min(1, timeLeft / total)) : 0;
+  // Urgency color: > half calm, last quarter urgent.
+  const color = ratio > 0.5 ? C.teal : ratio > 0.25 ? C.amberBorder : C.danger;
+  const low = ratio <= 0.25 && timeLeft > 0;
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: 96,
+        height: 96,
+        animation: low ? 'vwTimerPulse 1s ease-in-out infinite' : undefined,
+      }}
+      aria-label={`${timeLeft} seconds left`}
+    >
+      <svg width={96} height={96} viewBox="0 0 96 96" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={48} cy={48} r={r} fill="none" stroke={C.track} strokeWidth={8} />
+        <circle
+          cx={48}
+          cy={48}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={8}
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={circ * (1 - ratio)}
+          style={{ transition: 'stroke-dashoffset 0.95s linear, stroke 0.4s ease' }}
+        />
+      </svg>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: DISPLAY,
+          fontSize: 30,
+          fontWeight: 800,
+          color,
+          transition: 'color 0.4s ease',
+        }}
+      >
+        {timeLeft}
+      </div>
     </div>
   );
 }
