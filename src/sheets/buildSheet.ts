@@ -6,6 +6,9 @@ import { buildWordSearch } from '../generators/wordsearch';
 import { buildCrossword } from '../generators/crossword';
 import type { StoreState } from '../store';
 
+/** Free-distribution credit stamped on printed worksheets when opted in (M1). */
+const CREDIT_LINE = 'Made with Wordlist Wonders · ooshonline.github.io/wordlistwonders';
+
 // ── page view-models ────────────────────────────────────────────────────────
 export interface BingoCellView {
   kind: 'free' | 'blank' | 'word';
@@ -27,6 +30,7 @@ export interface BingoPage {
   subtitle: string;
   showNameLine: boolean;
   content: string;
+  credit?: string;
 }
 export interface FlashCardView {
   text: string;
@@ -44,6 +48,7 @@ export interface FlashPage {
   title: string;
   subtitle: string;
   showNameLine: boolean;
+  credit?: string;
 }
 export interface SearchPage {
   kind: 'search';
@@ -55,6 +60,7 @@ export interface SearchPage {
   title: string;
   subtitle: string;
   showNameLine: boolean;
+  credit?: string;
 }
 export interface CrossPage {
   kind: 'cross';
@@ -67,6 +73,7 @@ export interface CrossPage {
   title: string;
   subtitle: string;
   showNameLine: boolean;
+  credit?: string;
 }
 export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage;
 
@@ -234,6 +241,9 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
     else if (noClues)
       warning = `${noClues} word(s) have no clue yet — add clues in Edit Set so students have something to solve.`;
   }
+
+  // Stamp the opt-in credit line onto every page (off by default).
+  if (state.printCredit) for (const p of pages) p.credit = CREDIT_LINE;
 
   return {
     pages,

@@ -69,6 +69,23 @@ export function SheetPageView({ page }: { page: SheetPage }) {
       {page.kind === 'flash' && <FlashBody page={page} />}
       {page.kind === 'search' && <SearchBody page={page} />}
       {page.kind === 'cross' && <CrossBody page={page} />}
+
+      {page.credit && (
+        <div
+          style={{
+            marginTop: 'auto',
+            paddingTop: 12,
+            borderTop: `1px solid ${C.borderLight}`,
+            fontSize: 11,
+            fontWeight: 700,
+            textAlign: 'center',
+            letterSpacing: '0.02em',
+            color: C.placeholderInk,
+          }}
+        >
+          {page.credit}
+        </div>
+      )}
     </div>
   );
 }

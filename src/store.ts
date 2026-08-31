@@ -75,6 +75,8 @@ export interface StoreState {
   printOpen: boolean;
   sheetEditorOpen: boolean;
   sheetColW: number;
+  /** Optional "Made with Wordlist Wonders" credit line on printed worksheets. */
+  printCredit: boolean;
   /** Per-kind shuffle salt; incrementing busts the puzzle memo cache. */
   salt: { bingo: number; wordsearch: number; crossword: number };
   sets: WordSet[];
@@ -169,6 +171,7 @@ export interface StoreActions {
   reshuffleSheet: (kind: 'bingo' | 'wordsearch' | 'crossword') => void;
   toggleSheetEditor: () => void;
   setSheetColW: (w: number) => void;
+  setPrintCredit: (v: boolean) => void;
   // print handout
   openPrint: () => void;
   closePrint: () => void;
@@ -331,6 +334,7 @@ export const useStore = create<Store>((set, get) => {
     printOpen: false,
     sheetEditorOpen: false,
     sheetColW: 900,
+    printCredit: false,
     salt: { bingo: 0, wordsearch: 0, crossword: 0 },
     sets: initial.sets,
 
@@ -750,6 +754,7 @@ export const useStore = create<Store>((set, get) => {
     reshuffleSheet: (kind) => set((s) => ({ salt: { ...s.salt, [kind]: s.salt[kind] + 1 } })),
     toggleSheetEditor: () => set((s) => ({ sheetEditorOpen: !s.sheetEditorOpen })),
     setSheetColW: (w) => set({ sheetColW: w }),
+    setPrintCredit: (v) => set({ printCredit: v }),
 
     // ── print handout ──
     openPrint: () => set({ printOpen: true }),

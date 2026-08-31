@@ -27,6 +27,8 @@ export function SheetWorkspace() {
   const setSheetColW = useStore((s) => s.setSheetColW);
   const toggleEditor = useStore((s) => s.toggleSheetEditor);
   const reshuffle = useStore((s) => s.reshuffleSheet);
+  const printCredit = useStore((s) => s.printCredit);
+  const setPrintCredit = useStore((s) => s.setPrintCredit);
   const addWord = useStore((s) => s.addWord);
   const removeWord = useStore((s) => s.removeWord);
   const updateWordField = useStore((s) => s.updateWordField);
@@ -36,7 +38,7 @@ export function SheetWorkspace() {
     () => buildSheet(kind, set, state),
     // Rebuild when inputs that affect the sheet change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.salt],
+    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.salt, state.printCredit],
   );
 
   // Live preview zoom from the measured column width.
@@ -136,6 +138,17 @@ export function SheetWorkspace() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', justifyContent: 'center' }}>
           <SheetControls kind={kind} />
+          {/* Global print option: an opt-in app credit line on every worksheet (M1). */}
+          <LabeledSeg
+            label="Credit line"
+            name="vw-printcredit"
+            value={printCredit}
+            onChange={setPrintCredit}
+            options={[
+              { value: false, label: 'Off' },
+              { value: true, label: 'On' },
+            ]}
+          />
         </div>
 
         {data.warning && (
