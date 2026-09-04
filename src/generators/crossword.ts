@@ -34,23 +34,30 @@ interface Placed {
   num?: number;
 }
 
-export function buildCrossword(words: Word[]): Crossword {
-  const entries: { word: string; clue: string }[] = [];
-  const seen: Record<string, boolean> = {};
-  words.forEach((w) => {
-    const t = cleanWord(w.text);
-    if (t.length > 1 && !seen[t]) {
-      seen[t] = true;
-      entries.push({ word: t, clue: (w.clue || '').trim() });
-    }
-  });
-  // Longest-first, random tiebreak among equal lengths.
-  entries.sort((a, b) => b.word.length - a.word.length || Math.random() - 0.5);
+type Entry = { word: string; clue: string };
+
+interface Layout {
+  placed: Placed[];
+  map: Record<string, string>;
+  unplaced: string[];
+}
+
+const key = (r: number, c: number) => r + ',' + c;
+
+// One greedy placement pass over the given entries. The first word anchors the
+// grid; every later word must cross an already-placed word. Words that can't
+// cross on their first try are retried against the fuller grid until a whole
+// pass places nothing new — a word that failed early often crosses a word that
+// only got placed later, so this alone recovers many would-be "unplaced" words.
+function attemptLayout(source: Entry[]): Layout {
+  // Longest-first, with a fresh random tiebreak so repeated attempts explore
+  // different orderings (see buildCrossword's best-of-N loop).
+  const ordered = source
+    .slice()
+    .sort((a, b) => b.word.length - a.word.length || Math.random() - 0.5);
 
   const map: Record<string, string> = {};
   const placed: Placed[] = [];
-  const unplaced: string[] = [];
-  const key = (r: number, c: number) => r + ',' + c;
 
   const canPlace = (word: string, r: number, c: number, horiz: boolean): number => {
     // Reject a placement that would abut another word head-to-tail.
@@ -76,17 +83,17 @@ export function buildCrossword(words: Word[]): Crossword {
     return touches;
   };
 
-  const put = (e: { word: string; clue: string }, r: number, c: number, horiz: boolean) => {
+  const put = (e: Entry, r: number, c: number, horiz: boolean) => {
     for (let i = 0; i < e.word.length; i++) {
       map[key(horiz ? r : r + i, horiz ? c + i : c)] = e.word[i];
     }
     placed.push({ word: e.word, clue: e.clue, r, c, horiz });
   };
 
-  entries.forEach((e, idx) => {
-    if (!idx) {
+  const tryPlace = (e: Entry): boolean => {
+    if (!placed.length) {
       put(e, 0, 0, true);
-      return;
+      return true;
     }
     let best: { r: number; c: number; horiz: boolean; t: number } | null = null;
     placed.forEach((p) => {
@@ -107,9 +114,76 @@ export function buildCrossword(words: Word[]): Crossword {
     // `best` is assigned inside the nested forEach above, which TS control-flow
     // doesn't track — cast back to the known shape at the use site.
     const chosen = best as { r: number; c: number; horiz: boolean; t: number } | null;
-    if (chosen) put(e, chosen.r, chosen.c, chosen.horiz);
-    else unplaced.push(e.word);
+    if (!chosen) return false;
+    put(e, chosen.r, chosen.c, chosen.horiz);
+    return true;
+  };
+
+  let remaining = ordered;
+  let progress = true;
+  while (progress && remaining.length) {
+    progress = false;
+    const still: Entry[] = [];
+    for (const e of remaining) {
+      if (tryPlace(e)) progress = true;
+      else still.push(e);
+    }
+    remaining = still;
+  }
+
+  return { placed, map, unplaced: remaining.map((e) => e.word) };
+}
+
+// Bounding-box area of a layout — used to prefer a more compact grid when two
+// attempts place the same number of words.
+function layoutArea(map: Record<string, string>): number {
+  let minR = Infinity;
+  let maxR = -Infinity;
+  let minC = Infinity;
+  let maxC = -Infinity;
+  for (const k of Object.keys(map)) {
+    const parts = k.split(',');
+    const r = +parts[0];
+    const c = +parts[1];
+    if (r < minR) minR = r;
+    if (r > maxR) maxR = r;
+    if (c < minC) minC = c;
+    if (c > maxC) maxC = c;
+  }
+  if (!isFinite(minR)) return 0;
+  return (maxR - minR + 1) * (maxC - minC + 1);
+}
+
+export function buildCrossword(words: Word[]): Crossword {
+  const entries: Entry[] = [];
+  const seen: Record<string, boolean> = {};
+  words.forEach((w) => {
+    const t = cleanWord(w.text);
+    if (t.length > 1 && !seen[t]) {
+      seen[t] = true;
+      entries.push({ word: t, clue: (w.clue || '').trim() });
+    }
   });
+
+  // Placement is order-dependent, so run several randomized attempts and keep
+  // the one that fits the most words (tiebreak: the more compact grid). This
+  // cuts the rate of words left unplaced without loosening the crossing rules.
+  const ATTEMPTS = 24;
+  let best = attemptLayout(entries);
+  let bestArea = layoutArea(best.map);
+  for (let i = 1; i < ATTEMPTS && best.unplaced.length; i++) {
+    const cand = attemptLayout(entries);
+    const candArea = layoutArea(cand.map);
+    if (
+      cand.placed.length > best.placed.length ||
+      (cand.placed.length === best.placed.length && candArea < bestArea)
+    ) {
+      best = cand;
+      bestArea = candArea;
+    }
+  }
+
+  const { placed, map, unplaced } = best;
 
   if (!placed.length) {
     return { rows: 0, cols: 0, cells: [], across: [], down: [], unplaced };

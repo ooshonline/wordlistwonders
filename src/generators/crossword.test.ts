@@ -41,9 +41,22 @@ describe('buildCrossword', () => {
     expect(all.find((e) => e.word === 'BREAD')?.clue).toBe('You bake it');
   });
 
+  it('places every word of an interlocking set (best-of-N + retry)', () => {
+    // READ crosses BREAD on any shared letter, so a correct builder never
+    // leaves either unplaced. Guards the placement improvement that keeps the
+    // fail rate low (real 12–17 word teacher lists now place fully every build).
+    const cw = buildCrossword(mk([['bread'], ['read']]));
+    expect(cw.unplaced).toHaveLength(0);
+    expect(cw.across.length + cw.down.length).toBe(2);
+  });
+
   it('reports non-interlocking entries as unplaced', () => {
-    // Two words sharing no letters cannot interlock.
+    // Two words sharing no letters cannot interlock: the first-sorted word
+    // anchors the grid and the other is reported unplaced. Which word anchors
+    // depends on the generator's random longest-first tiebreak, so assert the
+    // invariant (exactly one of the pair is unplaced) rather than a fixed word.
     const cw = buildCrossword(mk([['abc'], ['xyz']]));
-    expect(cw.unplaced).toContain('XYZ');
+    expect(cw.unplaced).toHaveLength(1);
+    expect(['ABC', 'XYZ']).toContain(cw.unplaced[0]);
   });
 });

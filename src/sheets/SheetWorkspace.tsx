@@ -5,6 +5,7 @@ import { C, DISPLAY } from '../tokens';
 import { Icon, LabeledSeg, icons } from '../components/ui';
 import { buildSheet, sheetEditRows } from './buildSheet';
 import { SheetPageView } from './SheetPages';
+import { hasClue } from '../generators/clueSuggest';
 
 // Drive the browser print dialog for worksheet pages. Uses a body attribute so
 // screen and print share one DOM (see index.css @media print rules).
@@ -32,7 +33,11 @@ export function SheetWorkspace() {
   const addWord = useStore((s) => s.addWord);
   const removeWord = useStore((s) => s.removeWord);
   const updateWordField = useStore((s) => s.updateWordField);
+  const suggestMissingClues = useStore((s) => s.suggestMissingClues);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Crossword clue-suggestion affordance (F6): only when clues are actually blank.
+  const blankClues = kind === 'crossword' ? set.words.filter((w) => !hasClue(w)).length : 0;
 
   const data = useMemo(
     () => buildSheet(kind, set, state),
@@ -151,20 +156,37 @@ export function SheetWorkspace() {
           />
         </div>
 
-        {data.warning && (
+        {(data.warning || blankClues > 0) && (
           <div
             style={{
-              background: C.amber,
-              color: C.amberInk,
-              fontSize: 13,
-              fontWeight: 700,
-              padding: '9px 16px',
-              borderRadius: 12,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 10,
               maxWidth: 640,
-              textAlign: 'center',
             }}
           >
-            {data.warning}
+            {data.warning && (
+              <div
+                style={{
+                  background: C.amber,
+                  color: C.amberInk,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  padding: '9px 16px',
+                  borderRadius: 12,
+                  textAlign: 'center',
+                }}
+              >
+                {data.warning}
+              </div>
+            )}
+            {/* F6: one-tap local clue suggestions for a fresh, clue-less list. */}
+            {blankClues > 0 && (
+              <button type="button" onClick={suggestMissingClues} style={outlineBtn}>
+                {`Suggest clues for ${blankClues} blank${blankClues === 1 ? '' : 's'}`}
+              </button>
+            )}
           </div>
         )}
       </div>

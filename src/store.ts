@@ -12,6 +12,7 @@ import type {
 } from './types';
 import { SEED_SETS } from './seed';
 import { shuffle } from './generators/random';
+import { fillMissingClues } from './generators/clueSuggest';
 import { autoPos as wallAutoPos } from './activities/wallLayout';
 import { buildMatchDeck, type MatchCard, type MatchMode } from './generators/matching';
 
@@ -143,6 +144,8 @@ export interface StoreActions {
   addWords: (texts: string[]) => void;
   removeWord: (id: string) => void;
   updateWordField: (id: string, field: keyof Word, val: unknown) => void;
+  /** Fill blank clues in the current set with local suggestions (F6). */
+  suggestMissingClues: () => void;
   setWordTier: (id: string, tier: Tier) => void;
   setWordColor: (id: string, color: string | null) => void;
   toggleRecorded: (id: string) => void;
@@ -293,7 +296,20 @@ export const useStore = create<Store>((set, get) => {
 
   const buildQuizOptions = (targetId: string, words: Word[]): Word[] => {
     const target = words.find((w) => w.id === targetId)!;
-    const pool = words.filter((w) => w.id !== targetId);
+    // Distractors are keyed by their *displayed* text, not id: a teacher's list
+    // can hold duplicate words, and if a duplicate slipped into the options the
+    // answer's text would show on two buttons — a student could pick the right
+    // word yet be graded wrong. Dedupe by text (and skip the answer's text) so
+    // every option reads differently.
+    const seen = new Set([target.text.trim().toLowerCase()]);
+    const pool: Word[] = [];
+    for (const w of words) {
+      if (w.id === targetId) continue;
+      const key = w.text.trim().toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      pool.push(w);
+    }
     const distractors = shuffle(pool).slice(0, 3);
     return shuffle([target, ...distractors]);
   };
@@ -527,6 +543,21 @@ export const useStore = create<Store>((set, get) => {
             : s,
         ),
       ),
+    suggestMissingClues: () => {
+      const cur = getCurrentSet();
+      const { filled } = fillMissingClues(cur.words);
+      if (!filled) return;
+      const snapshot = get().sets;
+      mutateSets((sets) =>
+        sets.map((s) =>
+          s.id === get().currentSetId ? { ...s, words: fillMissingClues(s.words).words } : s,
+        ),
+      );
+      showUndoToast(
+        `Filled ${filled} clue${filled === 1 ? '' : 's'} — edit any of them in the word list.`,
+        () => mutateSets(() => snapshot),
+      );
+    },
     setWordTier: (id, tier) => get().updateWordField(id, 'tier', tier),
     setWordColor: (id, color) => get().updateWordField(id, 'color', color),
     toggleRecorded: (id) => {
