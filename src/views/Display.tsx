@@ -5,6 +5,7 @@ import { Reveal } from '../activities/Reveal';
 import { Quiz } from '../activities/Quiz';
 import { MissingWord } from '../activities/MissingWord';
 import { Flyswatter } from '../activities/Flyswatter';
+import { Matching } from '../activities/Matching';
 import { SheetWorkspace } from '../sheets/SheetWorkspace';
 
 export function Display() {
@@ -22,6 +23,8 @@ export function Display() {
       return <MissingWord />;
     case 'flyswatter':
       return <Flyswatter />;
+    case 'matching':
+      return <Matching />;
     case 'bingo':
     case 'flashcards':
     case 'wordsearch':

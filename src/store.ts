@@ -14,6 +14,7 @@ import { SEED_SETS } from './seed';
 import { shuffle } from './generators/random';
 import { fillMissingClues } from './generators/clueSuggest';
 import { autoPos as wallAutoPos } from './activities/wallLayout';
+import { buildMatchDeck, type MatchCard, type MatchMode } from './generators/matching';
 
 const STORAGE_KEY = 'vocabwall_v3';
 
@@ -32,6 +33,32 @@ export interface QuizState {
   customSeconds: number;
   timeLeft: number | null;
   missed: string[];
+  done: boolean;
+}
+
+// ── matching / memory game sub-state (CX1) ──────────────────────────────────
+// The deck comes from the pure `buildMatchDeck` generator; the store owns the
+// live game: which cards are face-up, which pairs are found, team scores, whose
+// turn it is. Flip two cards, then the component calls `resolveMatch` (after a
+// brief reveal) to score a match or pass the turn on a miss.
+export interface MatchState {
+  mode: MatchMode;
+  /** The shuffled deck for the current round. */
+  cards: MatchCard[];
+  cols: number;
+  rows: number;
+  /** Total pairs on the board. */
+  pairs: number;
+  /** Indices into `cards` currently face-up and awaiting compare (0–2). */
+  flipped: number[];
+  /** pairIds already matched (both cards stay face-up). */
+  matched: string[];
+  teamCount: number;
+  scores: number[];
+  /** Team index whose turn it is. */
+  turn: number;
+  /** Flip-pairs attempted this round. */
+  moves: number;
   done: boolean;
 }
 
@@ -73,6 +100,7 @@ export interface StoreState {
   carouselPlaying: boolean;
   revealedBySet: Record<string, Record<string, boolean>>;
   quiz: QuizState;
+  match: MatchState;
   printOpen: boolean;
   sheetEditorOpen: boolean;
   sheetColW: number;
@@ -157,6 +185,13 @@ export interface StoreActions {
   nextQuestion: () => void;
   playQuizAgain: () => void;
   createReviewSetFromMissed: () => void;
+  // matching / memory game (CX1)
+  initMatch: () => void;
+  flipMatchCard: (index: number) => void;
+  resolveMatch: () => void;
+  setMatchMode: (mode: MatchMode) => void;
+  setMatchTeamCount: (n: number) => void;
+  reshuffleMatch: () => void;
   // sheet settings
   setBingoCount: (v: number) => void;
   setBingoGridSize: (v: string) => void;
@@ -347,6 +382,20 @@ export const useStore = create<Store>((set, get) => {
       missed: [],
       done: false,
     },
+    match: {
+      mode: 'clue',
+      cards: [],
+      cols: 0,
+      rows: 0,
+      pairs: 0,
+      flipped: [],
+      matched: [],
+      teamCount: 2,
+      scores: [0, 0],
+      turn: 0,
+      moves: 0,
+      done: false,
+    },
     printOpen: false,
     sheetEditorOpen: false,
     sheetColW: 900,
@@ -364,6 +413,7 @@ export const useStore = create<Store>((set, get) => {
       if (quizTimer) clearInterval(quizTimer);
       set({ displayMode: mode });
       if (mode === 'quiz') get().initQuiz();
+      if (mode === 'matching') get().initMatch();
       if (mode !== 'carousel') {
         set({ carouselPlaying: false });
         get().restartCarouselTimer();
@@ -767,6 +817,77 @@ export const useStore = create<Store>((set, get) => {
         },
       );
     },
+
+    // ── matching / memory game (CX1) ──
+    initMatch: () => {
+      const s = getCurrentSet();
+      const m = get().match;
+      const deck = buildMatchDeck(s.words, m.mode);
+      const teamCount = m.teamCount || 2;
+      set({
+        match: {
+          ...m,
+          cards: deck.cards,
+          cols: deck.cols,
+          rows: deck.rows,
+          pairs: deck.pairs,
+          flipped: [],
+          matched: [],
+          teamCount,
+          scores: new Array(teamCount).fill(0),
+          turn: 0,
+          moves: 0,
+          done: false,
+        },
+      });
+    },
+    flipMatchCard: (index) =>
+      set((s) => {
+        const m = s.match;
+        const card = m.cards[index];
+        // Ignore clicks on an already-found pair, a face-up card, or a full pair.
+        if (!card || m.flipped.length >= 2 || m.flipped.includes(index) || m.matched.includes(card.pairId)) {
+          return {} as Partial<StoreState>;
+        }
+        return { match: { ...m, flipped: [...m.flipped, index] } };
+      }),
+    // Called by the component after the two face-up cards have been shown briefly.
+    resolveMatch: () =>
+      set((s) => {
+        const m = s.match;
+        if (m.flipped.length !== 2) return {} as Partial<StoreState>;
+        const [a, b] = m.flipped;
+        const isMatch = m.cards[a]?.pairId === m.cards[b]?.pairId;
+        if (isMatch) {
+          const matched = [...m.matched, m.cards[a].pairId];
+          const scores = m.scores.slice();
+          scores[m.turn] = (scores[m.turn] || 0) + 1;
+          return {
+            match: {
+              ...m,
+              matched,
+              scores,
+              flipped: [],
+              moves: m.moves + 1,
+              done: matched.length >= m.pairs, // a correct guess keeps the same team's turn
+            },
+          };
+        }
+        // Miss: pass the turn to the next team and flip both back down.
+        return {
+          match: { ...m, flipped: [], moves: m.moves + 1, turn: (m.turn + 1) % Math.max(1, m.teamCount) },
+        };
+      }),
+    setMatchMode: (mode) => {
+      set((s) => ({ match: { ...s.match, mode } }));
+      get().initMatch();
+    },
+    setMatchTeamCount: (n) => {
+      const teamCount = Math.max(1, Math.min(4, n || 1));
+      set((s) => ({ match: { ...s.match, teamCount, scores: new Array(teamCount).fill(0) } }));
+      get().initMatch();
+    },
+    reshuffleMatch: () => get().initMatch(),
 
     // ── sheet settings ──
     setBingoCount: (v) => set((s) => ({ bingo: { ...s.bingo, count: Math.max(1, Math.min(30, v || 1)) } })),

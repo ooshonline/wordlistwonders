@@ -53,6 +53,7 @@ export type DisplayMode =
   | 'quiz'
   | 'missing'
   | 'flyswatter'
+  | 'matching'
   | 'flashcards'
   | 'bingo'
   | 'wordsearch'
