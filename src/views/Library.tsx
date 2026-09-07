@@ -82,11 +82,10 @@ export function Library() {
           return (
             <div
               key={set.id}
+              className="vw-card"
               style={{
                 background: C.surface,
                 borderRadius: 20,
-                boxShadow: '0 6px 20px rgba(26,50,96,0.08)',
-                border: `1px solid ${C.borderLight}`,
                 padding: 22,
               }}
             >

@@ -120,7 +120,11 @@ function ModeGroup({ modes }: { modes: DisplayMode[] }) {
       {modes.map((m) => {
         const active = displayMode === m;
         return (
-          <label key={m} style={{ ...segStyle(active), fontFamily: BODY }}>
+          <label
+            key={m}
+            className={active ? undefined : 'vw-seg-idle'}
+            style={{ ...segStyle(active), fontFamily: BODY }}
+          >
             <input type="radio" name="vw-mode" checked={active} onChange={() => setMode(m)} style={{ display: 'none' }} />
             {MODE_LABELS[m]}
           </label>

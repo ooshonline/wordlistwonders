@@ -66,6 +66,40 @@ input[type='range'] {
   }
 }
 
+/* ── Hover affordances (U7) ──────────────────────────────────────────────────
+   Clickable surfaces lift/respond on hover so they read as interactive on a
+   projector. Kept in CSS (not inline) so :hover works; the base card shadow
+   lives here too so the hover can deepen it. */
+.vw-card {
+  box-shadow: 0 6px 20px rgba(26, 50, 96, 0.08);
+  border: 1px solid #edeae0;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+.vw-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(26, 50, 96, 0.14);
+}
+
+/* Inactive toolbar tabs get a soft hover fill; active pills already read as
+   pressed, so only idle ones carry the hook. !important beats the inline
+   transparent background segStyle sets on inactive pills. */
+.vw-seg-idle {
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.vw-seg-idle:hover {
+  background: #e7e3d6 !important;
+  color: #1a3260 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vw-card {
+    transition: none;
+  }
+  .vw-card:hover {
+    transform: none;
+  }
+}
+
 /* ── Print pipeline ─────────────────────────────────────────────────────────
    Screen and print share one DOM; print is driven by body[data-print-mode].
    Use `visibility`, not `display` — a display:none ancestor cascade would
