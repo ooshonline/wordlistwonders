@@ -61,6 +61,11 @@ export function SheetWorkspace() {
   const zoom = Math.min(1, Math.max(0.35, ((colW || 900) - 26) / 816));
   const rows = sheetEditRows(set.words, data.editLabels);
 
+  // Print-clarity note (X3): reassure teachers they get exactly the previewed
+  // pages. Answer-key worksheets add an extra page, so call that out.
+  const pageCount = data.pages.length;
+  const hasKey = data.pages.some((p) => 'isKey' in p && p.isKey);
+
   return (
     <div
       className="vw-sheet-area"
@@ -187,6 +192,29 @@ export function SheetWorkspace() {
                 {`Suggest clues for ${blankClues} blank${blankClues === 1 ? '' : 's'}`}
               </button>
             )}
+          </div>
+        )}
+
+        {/* X3: quiet "what will print" reassurance — the print pipeline renders
+            exactly the pages previewed below (one page each). */}
+        {pageCount > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              fontSize: 12.5,
+              fontWeight: 700,
+              color: C.ink2,
+              opacity: 0.72,
+              textAlign: 'center',
+            }}
+          >
+            <Icon path={icons.printer} size={15} />
+            <span>
+              Prints {pageCount} page{pageCount === 1 ? '' : 's'} — exactly what you see below
+              {hasKey ? ', including the answer key' : ''}.
+            </span>
           </div>
         )}
       </div>
