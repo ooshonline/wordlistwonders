@@ -29,6 +29,7 @@ export function Display() {
     case 'flashcards':
     case 'wordsearch':
     case 'crossword':
+    case 'spelling':
       return <SheetWorkspace />;
     default:
       return null;

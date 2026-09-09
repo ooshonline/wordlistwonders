@@ -15,6 +15,7 @@ import { shuffle } from './generators/random';
 import { fillMissingClues } from './generators/clueSuggest';
 import { autoPos as wallAutoPos } from './activities/wallLayout';
 import { buildMatchDeck, type MatchCard, type MatchMode } from './generators/matching';
+import type { SpellingPrompt } from './generators/spellingTest';
 
 const STORAGE_KEY = 'vocabwall_v3';
 
@@ -90,6 +91,7 @@ export interface StoreState {
   flash: { perPage: number; content: string; cutLines: boolean };
   wordsearch: { size: number; diagonals: boolean; backwards: boolean; answerKey: boolean };
   crossword: { answerKey: boolean };
+  spelling: { prompt: SpellingPrompt; perPage: number; shuffleOrder: boolean; answerKey: boolean };
   currentSetId: string;
   selectedWordId: string | null;
   dragging: DragState | null;
@@ -107,7 +109,7 @@ export interface StoreState {
   /** Optional "Made with Wordlist Wonders" credit line on printed worksheets. */
   printCredit: boolean;
   /** Per-kind shuffle salt; incrementing busts the puzzle memo cache. */
-  salt: { bingo: number; wordsearch: number; crossword: number };
+  salt: { bingo: number; wordsearch: number; crossword: number; spelling: number };
   sets: WordSet[];
 }
 
@@ -206,7 +208,11 @@ export interface StoreActions {
   setSearchBackwards: (v: boolean) => void;
   setSearchAnswerKey: (v: boolean) => void;
   setCrossAnswerKey: (v: boolean) => void;
-  reshuffleSheet: (kind: 'bingo' | 'wordsearch' | 'crossword') => void;
+  setSpellingPrompt: (v: SpellingPrompt) => void;
+  setSpellingPerPage: (v: number) => void;
+  setSpellingShuffle: (v: boolean) => void;
+  setSpellingAnswerKey: (v: boolean) => void;
+  reshuffleSheet: (kind: 'bingo' | 'wordsearch' | 'crossword' | 'spelling') => void;
   toggleSheetEditor: () => void;
   setSheetColW: (w: number) => void;
   setPrintCredit: (v: boolean) => void;
@@ -357,6 +363,7 @@ export const useStore = create<Store>((set, get) => {
     flash: { perPage: 4, content: 'imageWord', cutLines: true },
     wordsearch: { size: 12, diagonals: true, backwards: false, answerKey: false },
     crossword: { answerKey: false },
+    spelling: { prompt: 'readAloud', perPage: 10, shuffleOrder: false, answerKey: true },
     currentSetId: initial.currentSetId,
     selectedWordId: null,
     dragging: null,
@@ -400,7 +407,7 @@ export const useStore = create<Store>((set, get) => {
     sheetEditorOpen: false,
     sheetColW: 900,
     printCredit: false,
-    salt: { bingo: 0, wordsearch: 0, crossword: 0 },
+    salt: { bingo: 0, wordsearch: 0, crossword: 0, spelling: 0 },
     sets: initial.sets,
 
     // ── navigation ──
@@ -903,6 +910,10 @@ export const useStore = create<Store>((set, get) => {
     setSearchBackwards: (v) => set((s) => ({ wordsearch: { ...s.wordsearch, backwards: v } })),
     setSearchAnswerKey: (v) => set((s) => ({ wordsearch: { ...s.wordsearch, answerKey: v } })),
     setCrossAnswerKey: (v) => set((s) => ({ crossword: { ...s.crossword, answerKey: v } })),
+    setSpellingPrompt: (v) => set((s) => ({ spelling: { ...s.spelling, prompt: v } })),
+    setSpellingPerPage: (v) => set((s) => ({ spelling: { ...s.spelling, perPage: v } })),
+    setSpellingShuffle: (v) => set((s) => ({ spelling: { ...s.spelling, shuffleOrder: v } })),
+    setSpellingAnswerKey: (v) => set((s) => ({ spelling: { ...s.spelling, answerKey: v } })),
     reshuffleSheet: (kind) => set((s) => ({ salt: { ...s.salt, [kind]: s.salt[kind] + 1 } })),
     toggleSheetEditor: () => set((s) => ({ sheetEditorOpen: !s.sheetEditorOpen })),
     setSheetColW: (w) => set({ sheetColW: w }),

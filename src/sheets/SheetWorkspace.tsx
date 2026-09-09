@@ -43,7 +43,7 @@ export function SheetWorkspace() {
     () => buildSheet(kind, set, state),
     // Rebuild when inputs that affect the sheet change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.salt, state.printCredit],
+    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.salt, state.printCredit],
   );
 
   // Live preview zoom from the measured column width.
@@ -103,7 +103,7 @@ export function SheetWorkspace() {
           {data.showShuffle && (
             <button
               type="button"
-              onClick={() => reshuffle(kind as 'bingo' | 'wordsearch' | 'crossword')}
+              onClick={() => reshuffle(kind as 'bingo' | 'wordsearch' | 'crossword' | 'spelling')}
               style={outlineBtn}
             >
               Shuffle
@@ -402,6 +402,11 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
   const setSearchBackwards = useStore((s) => s.setSearchBackwards);
   const setSearchAnswerKey = useStore((s) => s.setSearchAnswerKey);
   const setCrossAnswerKey = useStore((s) => s.setCrossAnswerKey);
+  const spelling = useStore((s) => s.spelling);
+  const setSpellingPrompt = useStore((s) => s.setSpellingPrompt);
+  const setSpellingPerPage = useStore((s) => s.setSpellingPerPage);
+  const setSpellingShuffle = useStore((s) => s.setSpellingShuffle);
+  const setSpellingAnswerKey = useStore((s) => s.setSpellingAnswerKey);
 
   if (kind === 'bingo') {
     return (
@@ -529,6 +534,49 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
           name="vw-wskey"
           value={ws.answerKey}
           onChange={setSearchAnswerKey}
+          options={[
+            { value: true, label: 'Include' },
+            { value: false, label: 'Skip' },
+          ]}
+        />
+      </>
+    );
+  }
+  if (kind === 'spelling') {
+    return (
+      <>
+        <LabeledSeg
+          label="Prompt"
+          name="vw-spellprompt"
+          value={spelling.prompt}
+          onChange={setSpellingPrompt}
+          options={[
+            { value: 'readAloud', label: 'Read aloud' },
+            { value: 'image', label: 'Picture' },
+          ]}
+        />
+        <LabeledSeg
+          label="Per page"
+          name="vw-spellper"
+          value={spelling.perPage}
+          onChange={setSpellingPerPage}
+          options={[10, 15, 20, 25, 30].map((n) => ({ value: n, label: String(n) }))}
+        />
+        <LabeledSeg
+          label="Order"
+          name="vw-spellorder"
+          value={spelling.shuffleOrder}
+          onChange={setSpellingShuffle}
+          options={[
+            { value: false, label: 'List order' },
+            { value: true, label: 'Shuffle' },
+          ]}
+        />
+        <LabeledSeg
+          label="Answer key"
+          name="vw-spellkey"
+          value={spelling.answerKey}
+          onChange={setSpellingAnswerKey}
           options={[
             { value: true, label: 'Include' },
             { value: false, label: 'Skip' },

@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { C, DISPLAY } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
 import type { SheetPage } from './buildSheet';
@@ -69,6 +70,7 @@ export function SheetPageView({ page }: { page: SheetPage }) {
       {page.kind === 'flash' && <FlashBody page={page} />}
       {page.kind === 'search' && <SearchBody page={page} />}
       {page.kind === 'cross' && <CrossBody page={page} />}
+      {page.kind === 'spelling' && <SpellingBody page={page} />}
 
       {page.credit && (
         <div
@@ -203,6 +205,87 @@ function SearchBody({ page }: { page: Extract<SheetPage, { kind: 'search' }> }) 
     </div>
   );
 }
+
+function SpellingBody({ page }: { page: Extract<SheetPage, { kind: 'spelling' }> }) {
+  const isImage = page.prompt === 'image';
+  // Small teacher/student instruction under the header (skipped on the key).
+  const instruction = page.isKey
+    ? 'Answer key — the correct spelling for every item.'
+    : isImage
+      ? 'Write the word for each picture on the line.'
+      : 'Listen to each word your teacher reads, then write it on the line.';
+
+  const NumberLine = ({ item }: { item: (typeof page.items)[number] }) => (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
+      <span style={spellNum}>{item.num}.</span>
+      <div style={spellLine}>{item.showAnswer && <span style={spellAnswer}>{item.answer}</span>}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 22 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.placeholderInk }}>{instruction}</div>
+      {isImage ? (
+        <div
+          style={{
+            flex: 1,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, minmax(0,1fr))',
+            gap: '26px 34px',
+            alignContent: 'start',
+          }}
+        >
+          {page.items.map((it) => (
+            <div key={it.num} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div
+                style={{
+                  height: 132,
+                  border: `2px solid ${C.borderLight}`,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  background: '#ffffff',
+                }}
+              >
+                <ImageSlot id={it.slotId} fit="contain" shape="rounded" radius={10} placeholder="" />
+              </div>
+              <NumberLine item={it} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr', gap: 20, alignContent: 'start' }}>
+          {page.items.map((it) => (
+            <NumberLine key={it.num} item={it} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const spellNum: CSSProperties = {
+  fontFamily: DISPLAY,
+  fontSize: 18,
+  fontWeight: 800,
+  color: C.ink,
+  minWidth: 30,
+  textAlign: 'right',
+};
+const spellLine: CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+  borderBottom: `2px dotted ${C.dotted}`,
+  minHeight: 36,
+  paddingBottom: 4,
+  display: 'flex',
+  alignItems: 'flex-end',
+};
+const spellAnswer: CSSProperties = {
+  fontSize: 19,
+  fontWeight: 800,
+  color: C.tealInk,
+  letterSpacing: '0.02em',
+};
 
 function CrossBody({ page }: { page: Extract<SheetPage, { kind: 'cross' }> }) {
   const px = page.cellPx;

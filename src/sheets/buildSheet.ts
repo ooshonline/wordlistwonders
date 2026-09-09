@@ -4,6 +4,7 @@ import { wordSig, cleanWord } from '../generators/random';
 import { buildBingoCards } from '../generators/bingo';
 import { buildWordSearch } from '../generators/wordsearch';
 import { buildCrossword } from '../generators/crossword';
+import { buildSpellingTest, spellingPages, type SpellingPrompt } from '../generators/spellingTest';
 import type { StoreState } from '../store';
 
 /** Free-distribution credit stamped on printed worksheets when opted in (M1). */
@@ -75,7 +76,26 @@ export interface CrossPage {
   showNameLine: boolean;
   credit?: string;
 }
-export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage;
+export interface SpellingItemView {
+  num: number;
+  /** The word — rendered only on the answer key. */
+  answer: string;
+  /** Image-slot key, used in the picture-prompt mode. */
+  slotId: string;
+  showImage: boolean;
+  showAnswer: boolean;
+}
+export interface SpellingPage {
+  kind: 'spelling';
+  items: SpellingItemView[];
+  prompt: SpellingPrompt;
+  isKey: boolean;
+  title: string;
+  subtitle: string;
+  showNameLine: boolean;
+  credit?: string;
+}
+export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage;
 
 export interface SheetData {
   pages: SheetPage[];
@@ -240,6 +260,38 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
       warning = "Couldn't interlock: " + raw.unplaced.join(', ') + '. Shuffle to try a different layout.';
     else if (noClues)
       warning = `${noClues} word(s) have no clue yet — add clues in Edit Set so students have something to solve.`;
+  } else if (kind === 'spelling') {
+    const sp = state.spelling;
+    // Randomized order only re-rolls when the teacher shuffles (salt), so the
+    // preview is stable between renders. Test + key pages share this one order.
+    const test = memoPuzzle(
+      `spelling|${sig}|${sp.prompt}|${sp.perPage}|${sp.shuffleOrder}|${state.salt.spelling}`,
+      () => buildSpellingTest(words, { prompt: sp.prompt, perPage: sp.perPage, shuffleOrder: sp.shuffleOrder }),
+    );
+    const chunks = spellingPages(test);
+    const isImage = test.prompt === 'image';
+    const wordCount = `${test.total} word${test.total === 1 ? '' : 's'}`;
+    const mkPage = (chunk: typeof chunks[number], idx: number, isKey: boolean): SpellingPage => ({
+      kind: 'spelling',
+      items: chunk.map((it) => ({
+        num: it.num,
+        answer: it.answer,
+        slotId: it.slotId,
+        showImage: isImage,
+        showAnswer: isKey,
+      })),
+      prompt: test.prompt,
+      isKey,
+      title: listName + ' — Spelling Test' + (isKey ? ' (Answer Key)' : ''),
+      subtitle: wordCount + (chunks.length > 1 ? ` · Page ${idx + 1} of ${chunks.length}` : ''),
+      // Answer key omits Name/Date (B1); the student sheet keeps it.
+      showNameLine: !isKey,
+    });
+    chunks.forEach((chunk, i) => pages.push(mkPage(chunk, i, false)));
+    if (sp.answerKey) chunks.forEach((chunk, i) => pages.push(mkPage(chunk, i, true)));
+    kindLabel = 'Spelling Test';
+    summary = `${wordCount} · ${pages.length} page(s)`;
+    if (test.total === 0) warning = 'Add some words to this list to build a spelling test.';
   }
 
   // Stamp the opt-in credit line onto every page (off by default).
@@ -251,7 +303,8 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
     summary,
     warning,
     showClueColumn: kind === 'crossword',
-    showShuffle: kind !== 'flashcards',
+    // Spelling only shuffles when the teacher opts into randomized order.
+    showShuffle: kind === 'spelling' ? state.spelling.shuffleOrder : kind !== 'flashcards',
     editLabels,
   };
 }

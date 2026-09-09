@@ -21,9 +21,10 @@ const MODE_LABELS: Record<DisplayMode, string> = {
   flashcards: 'Flash Cards',
   wordsearch: 'Word Search',
   crossword: 'Crossword',
+  spelling: 'Spelling Test',
 };
 
-const PRINT_MODES: DisplayMode[] = ['flashcards', 'bingo', 'wordsearch', 'crossword'];
+const PRINT_MODES: DisplayMode[] = ['flashcards', 'bingo', 'wordsearch', 'crossword', 'spelling'];
 const PROJECT_MODES: DisplayMode[] = ['grid', 'carousel', 'reveal', 'quiz', 'missing', 'flyswatter', 'matching'];
 
 export function App() {
