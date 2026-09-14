@@ -6,6 +6,7 @@ import { Quiz } from '../activities/Quiz';
 import { MissingWord } from '../activities/MissingWord';
 import { Flyswatter } from '../activities/Flyswatter';
 import { Matching } from '../activities/Matching';
+import { SentenceBuilder } from '../activities/SentenceBuilder';
 import { SheetWorkspace } from '../sheets/SheetWorkspace';
 
 export function Display() {
@@ -25,6 +26,8 @@ export function Display() {
       return <Flyswatter />;
     case 'matching':
       return <Matching />;
+    case 'sentence':
+      return <SentenceBuilder />;
     case 'bingo':
     case 'flashcards':
     case 'wordsearch':

@@ -17,6 +17,7 @@ const MODE_LABELS: Record<DisplayMode, string> = {
   missing: 'Missing Word',
   flyswatter: 'Flyswatter',
   matching: 'Matching',
+  sentence: 'Sentence Builder',
   bingo: 'Bingo',
   flashcards: 'Flash Cards',
   wordsearch: 'Word Search',
@@ -25,7 +26,7 @@ const MODE_LABELS: Record<DisplayMode, string> = {
 };
 
 const PRINT_MODES: DisplayMode[] = ['flashcards', 'bingo', 'wordsearch', 'crossword', 'spelling'];
-const PROJECT_MODES: DisplayMode[] = ['grid', 'carousel', 'reveal', 'quiz', 'missing', 'flyswatter', 'matching'];
+const PROJECT_MODES: DisplayMode[] = ['grid', 'carousel', 'reveal', 'quiz', 'missing', 'flyswatter', 'matching', 'sentence'];
 
 export function App() {
   const view = useStore((s) => s.view);

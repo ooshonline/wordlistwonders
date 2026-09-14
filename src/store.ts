@@ -449,6 +449,7 @@ export const useStore = create<Store>((set, get) => {
       set({ displayMode: mode });
       if (mode === 'quiz') get().initQuiz();
       if (mode === 'matching') get().initMatch();
+      if (mode === 'sentence') get().initSentence();
       if (mode !== 'carousel') {
         set({ carouselPlaying: false });
         get().restartCarouselTimer();
