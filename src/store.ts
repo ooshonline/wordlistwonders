@@ -16,6 +16,7 @@ import { fillMissingClues } from './generators/clueSuggest';
 import { autoPos as wallAutoPos } from './activities/wallLayout';
 import { buildMatchDeck, type MatchCard, type MatchMode } from './generators/matching';
 import type { SpellingPrompt } from './generators/spellingTest';
+import { buildSentenceSet, type SentenceCard, type SentenceMode } from './generators/sentenceBuilder';
 
 const STORAGE_KEY = 'vocabwall_v3';
 
@@ -63,6 +64,23 @@ export interface MatchState {
   done: boolean;
 }
 
+// ── sentence-builder sub-state (CX2) ────────────────────────────────────────
+// The cards come from the pure `buildSentenceSet` generator; the store owns the
+// live projector session: which card is showing and whether its scaffolds
+// (clue hint / translation) are revealed. One word at a time; next/prev step
+// through the set, wrapping around.
+export interface SentenceState {
+  mode: SentenceMode;
+  /** The built cards for the current session (in presentation order). */
+  cards: SentenceCard[];
+  /** 0-based index of the card currently on screen. */
+  index: number;
+  /** Whether the current card's hint/translation scaffolds are shown. */
+  revealed: boolean;
+  shuffleOrder: boolean;
+  total: number;
+}
+
 interface DragState {
   wordId: string;
   startX: number;
@@ -103,6 +121,7 @@ export interface StoreState {
   revealedBySet: Record<string, Record<string, boolean>>;
   quiz: QuizState;
   match: MatchState;
+  sentence: SentenceState;
   printOpen: boolean;
   sheetEditorOpen: boolean;
   sheetColW: number;
@@ -194,6 +213,14 @@ export interface StoreActions {
   setMatchMode: (mode: MatchMode) => void;
   setMatchTeamCount: (n: number) => void;
   reshuffleMatch: () => void;
+  // sentence builder (CX2)
+  initSentence: () => void;
+  sentenceNext: () => void;
+  sentencePrev: () => void;
+  toggleSentenceReveal: () => void;
+  setSentenceMode: (mode: SentenceMode) => void;
+  setSentenceShuffle: (v: boolean) => void;
+  reshuffleSentence: () => void;
   // sheet settings
   setBingoCount: (v: number) => void;
   setBingoGridSize: (v: string) => void;
@@ -403,6 +430,7 @@ export const useStore = create<Store>((set, get) => {
       moves: 0,
       done: false,
     },
+    sentence: { mode: 'mixed', cards: [], index: 0, revealed: false, shuffleOrder: false, total: 0 },
     printOpen: false,
     sheetEditorOpen: false,
     sheetColW: 900,
@@ -895,6 +923,36 @@ export const useStore = create<Store>((set, get) => {
       get().initMatch();
     },
     reshuffleMatch: () => get().initMatch(),
+
+    // ── sentence builder (CX2) ──
+    initSentence: () => {
+      const s = getCurrentSet();
+      const st = get().sentence;
+      const data = buildSentenceSet(s.words, { mode: st.mode, shuffleOrder: st.shuffleOrder });
+      set({ sentence: { ...st, cards: data.cards, total: data.total, index: 0, revealed: false } });
+    },
+    sentenceNext: () =>
+      set((s) => {
+        const t = s.sentence.total;
+        if (t <= 0) return {} as Partial<StoreState>;
+        return { sentence: { ...s.sentence, index: (s.sentence.index + 1) % t, revealed: false } };
+      }),
+    sentencePrev: () =>
+      set((s) => {
+        const t = s.sentence.total;
+        if (t <= 0) return {} as Partial<StoreState>;
+        return { sentence: { ...s.sentence, index: (s.sentence.index - 1 + t) % t, revealed: false } };
+      }),
+    toggleSentenceReveal: () => set((s) => ({ sentence: { ...s.sentence, revealed: !s.sentence.revealed } })),
+    setSentenceMode: (mode) => {
+      set((s) => ({ sentence: { ...s.sentence, mode } }));
+      get().initSentence();
+    },
+    setSentenceShuffle: (v) => {
+      set((s) => ({ sentence: { ...s.sentence, shuffleOrder: v } }));
+      get().initSentence();
+    },
+    reshuffleSentence: () => get().initSentence(),
 
     // ── sheet settings ──
     setBingoCount: (v) => set((s) => ({ bingo: { ...s.bingo, count: Math.max(1, Math.min(30, v || 1)) } })),
