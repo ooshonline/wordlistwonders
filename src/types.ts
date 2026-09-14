@@ -54,6 +54,7 @@ export type DisplayMode =
   | 'missing'
   | 'flyswatter'
   | 'matching'
+  | 'sentence'
   | 'flashcards'
   | 'bingo'
   | 'wordsearch'
