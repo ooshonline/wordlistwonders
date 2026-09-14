@@ -66,6 +66,24 @@ input[type='range'] {
   }
 }
 
+/* Carousel auto-advance progress bar (G5) — the fill grows from empty to full
+   over one word's duration, so a class can see how long until the next card.
+   Keyed on the word index in the component, so it restarts each advance. */
+@keyframes vw-carousel-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*='vw-carousel-progress'] {
+    animation: none !important;
+  }
+}
+
 /* ── Hover affordances (U7) ──────────────────────────────────────────────────
    Clickable surfaces lift/respond on hover so they read as interactive on a
    projector. Kept in CSS (not inline) so :hover works; the base card shadow

@@ -16,6 +16,7 @@ export function Carousel() {
   const setSpeed = useStore((s) => s.setSpeed);
 
   const words = set.words;
+  const speed = set.carouselSpeed || 4;
   const showImage = contentMode !== 'wordOnly';
   const showText = contentMode !== 'imageOnly';
   const carIdx = words.length ? idx % words.length : 0;
@@ -57,6 +58,35 @@ export function Carousel() {
           <Icon path={icons.chevronRight} size={26} />
         </button>
       </div>
+      {words.length > 0 && (
+        <div
+          style={{
+            width: 420,
+            maxWidth: '90%',
+            height: 8,
+            borderRadius: 999,
+            background: C.track,
+            overflow: 'hidden',
+          }}
+          aria-hidden
+        >
+          {/* Fill restarts on every advance (keyed on the index) and pauses with
+              the carousel. Duration matches the auto-advance interval so the bar
+              reaches full just as the next word appears. */}
+          <div
+            key={`${carIdx}-${playing}`}
+            style={{
+              height: '100%',
+              width: '0%',
+              borderRadius: 999,
+              background: C.teal,
+              animation: playing
+                ? `vw-carousel-progress ${speed}s linear forwards`
+                : 'none',
+            }}
+          />
+        </div>
+      )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
         <button
           type="button"
