@@ -1,6 +1,11 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../store';
-import { C, DISPLAY, RAINBOW } from '../tokens';
+import { C, DISPLAY, BODY, RAINBOW } from '../tokens';
+import { Icon, icons } from '../components/ui';
+
+// The canonical live app URL teachers should share (always the deployed site,
+// never the dev/localhost origin).
+const APP_URL = 'https://ooshonline.github.io/wordlistwonders/';
 
 interface FloatWord {
   key: number;
@@ -25,7 +30,34 @@ interface Phys {
 export function Home() {
   const sets = useStore((s) => s.sets);
   const goLibrary = useStore((s) => s.goLibrary);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(APP_URL);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard blocked (e.g. insecure context): the link is shown in a
+      // selectable field the teacher can copy by hand, so no action needed.
+    }
+  };
+
+  const nativeShare = async () => {
+    if (!canNativeShare) return;
+    try {
+      await navigator.share({
+        title: 'Wordlist Wonders',
+        text: 'Turn any word list into ready-to-run classroom activities.',
+        url: APP_URL,
+      });
+    } catch {
+      // User dismissed the native share sheet — nothing to do.
+    }
+  };
   const elsRef = useRef<(HTMLDivElement | null)[]>([]);
   const physRef = useRef<Phys[]>([]);
   const rafRef = useRef<number>(0);
@@ -226,6 +258,147 @@ export function Home() {
         >
           Start
         </button>
+
+        <button
+          type="button"
+          onClick={() => setShareOpen((v) => !v)}
+          aria-expanded={shareOpen}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 2,
+            padding: '8px 16px',
+            borderRadius: 999,
+            background: 'transparent',
+            border: 'none',
+            color: C.ink2,
+            fontFamily: BODY,
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: 'pointer',
+          }}
+        >
+          <Icon path={icons.share} size={16} />
+          Share this app
+        </button>
+
+        {shareOpen && (
+          <div
+            style={{
+              width: 'min(360px, 88vw)',
+              background: C.surface,
+              border: `1px solid ${C.borderCard}`,
+              borderRadius: 16,
+              boxShadow: '0 10px 30px rgba(26,50,96,0.14)',
+              padding: 20,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
+              textAlign: 'left',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ fontFamily: DISPLAY, fontWeight: 800, fontSize: 18, color: C.ink }}>
+                Share Wordlist Wonders
+              </div>
+              <button
+                type="button"
+                onClick={() => setShareOpen(false)}
+                aria-label="Close share panel"
+                style={{
+                  display: 'inline-flex',
+                  padding: 4,
+                  background: 'transparent',
+                  border: 'none',
+                  color: C.muted,
+                  cursor: 'pointer',
+                  borderRadius: 8,
+                }}
+              >
+                <Icon path={icons.x} size={18} />
+              </button>
+            </div>
+
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.ink2 }}>
+              It's free — pass it on to another teacher.
+            </div>
+
+            <input
+              type="text"
+              readOnly
+              value={APP_URL}
+              onFocus={(e) => e.currentTarget.select()}
+              aria-label="App link"
+              style={{
+                width: '100%',
+                boxSizing: 'border-box',
+                padding: '10px 12px',
+                borderRadius: 10,
+                border: `1px solid ${C.borderCard}`,
+                background: C.track,
+                color: C.ink,
+                fontFamily: BODY,
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            />
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              <button
+                type="button"
+                onClick={copyLink}
+                style={{
+                  flex: 1,
+                  minWidth: 130,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  padding: '11px 18px',
+                  borderRadius: 999,
+                  background: copied ? C.tealTint : C.green,
+                  color: copied ? C.tealInk : '#fff',
+                  border: 'none',
+                  fontFamily: BODY,
+                  fontWeight: 800,
+                  fontSize: 15,
+                  cursor: 'pointer',
+                }}
+              >
+                <Icon path={copied ? icons.check : icons.copy} size={16} />
+                {copied ? 'Copied!' : 'Copy link'}
+              </button>
+
+              {canNativeShare && (
+                <button
+                  type="button"
+                  onClick={nativeShare}
+                  style={{
+                    flex: 1,
+                    minWidth: 130,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    padding: '11px 18px',
+                    borderRadius: 999,
+                    background: C.surface,
+                    color: C.ink,
+                    border: `2px solid ${C.ink}`,
+                    fontFamily: BODY,
+                    fontWeight: 700,
+                    fontSize: 15,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Icon path={icons.share} size={16} />
+                  Share…
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
