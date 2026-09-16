@@ -55,6 +55,7 @@ export type DisplayMode =
   | 'flyswatter'
   | 'matching'
   | 'sentence'
+  | 'wordday'
   | 'flashcards'
   | 'bingo'
   | 'wordsearch'

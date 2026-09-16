@@ -17,6 +17,7 @@ import { autoPos as wallAutoPos } from './activities/wallLayout';
 import { buildMatchDeck, type MatchCard, type MatchMode } from './generators/matching';
 import type { SpellingPrompt } from './generators/spellingTest';
 import { buildSentenceSet, type SentenceCard, type SentenceMode } from './generators/sentenceBuilder';
+import { buildWordOfDay, type WordOfDayCard } from './generators/wordOfDay';
 
 const STORAGE_KEY = 'vocabwall_v3';
 
@@ -81,6 +82,21 @@ export interface SentenceState {
   total: number;
 }
 
+// ── word-of-the-day sub-state (CX4) ─────────────────────────────────────────
+// A calm, single-word focus session: one word at a time, big, with its picture.
+// The class sees the word + image first; the teacher reveals its meaning (clue)
+// and translation (gloss) when ready. next/prev step through the set, wrapping.
+export interface WordOfDayState {
+  /** The built cards for the current session (in presentation order). */
+  cards: WordOfDayCard[];
+  /** 0-based index of the card currently on screen. */
+  index: number;
+  /** Whether the current word's meaning/translation are shown. */
+  revealed: boolean;
+  shuffleOrder: boolean;
+  total: number;
+}
+
 interface DragState {
   wordId: string;
   startX: number;
@@ -122,6 +138,7 @@ export interface StoreState {
   quiz: QuizState;
   match: MatchState;
   sentence: SentenceState;
+  wordOfDay: WordOfDayState;
   printOpen: boolean;
   sheetEditorOpen: boolean;
   sheetColW: number;
@@ -221,6 +238,13 @@ export interface StoreActions {
   setSentenceMode: (mode: SentenceMode) => void;
   setSentenceShuffle: (v: boolean) => void;
   reshuffleSentence: () => void;
+  // word of the day (CX4)
+  initWordOfDay: () => void;
+  wordOfDayNext: () => void;
+  wordOfDayPrev: () => void;
+  toggleWordOfDayReveal: () => void;
+  setWordOfDayShuffle: (v: boolean) => void;
+  reshuffleWordOfDay: () => void;
   // sheet settings
   setBingoCount: (v: number) => void;
   setBingoGridSize: (v: string) => void;
@@ -431,6 +455,7 @@ export const useStore = create<Store>((set, get) => {
       done: false,
     },
     sentence: { mode: 'mixed', cards: [], index: 0, revealed: false, shuffleOrder: false, total: 0 },
+    wordOfDay: { cards: [], index: 0, revealed: false, shuffleOrder: false, total: 0 },
     printOpen: false,
     sheetEditorOpen: false,
     sheetColW: 900,
@@ -450,6 +475,7 @@ export const useStore = create<Store>((set, get) => {
       if (mode === 'quiz') get().initQuiz();
       if (mode === 'matching') get().initMatch();
       if (mode === 'sentence') get().initSentence();
+      if (mode === 'wordday') get().initWordOfDay();
       if (mode !== 'carousel') {
         set({ carouselPlaying: false });
         get().restartCarouselTimer();
@@ -954,6 +980,32 @@ export const useStore = create<Store>((set, get) => {
       get().initSentence();
     },
     reshuffleSentence: () => get().initSentence(),
+
+    // ── word of the day (CX4) ──
+    initWordOfDay: () => {
+      const s = getCurrentSet();
+      const st = get().wordOfDay;
+      const data = buildWordOfDay(s.words, { shuffleOrder: st.shuffleOrder });
+      set({ wordOfDay: { ...st, cards: data.cards, total: data.total, index: 0, revealed: false } });
+    },
+    wordOfDayNext: () =>
+      set((s) => {
+        const t = s.wordOfDay.total;
+        if (t <= 0) return {};
+        return { wordOfDay: { ...s.wordOfDay, index: (s.wordOfDay.index + 1) % t, revealed: false } };
+      }),
+    wordOfDayPrev: () =>
+      set((s) => {
+        const t = s.wordOfDay.total;
+        if (t <= 0) return {};
+        return { wordOfDay: { ...s.wordOfDay, index: (s.wordOfDay.index - 1 + t) % t, revealed: false } };
+      }),
+    toggleWordOfDayReveal: () => set((s) => ({ wordOfDay: { ...s.wordOfDay, revealed: !s.wordOfDay.revealed } })),
+    setWordOfDayShuffle: (v) => {
+      set((s) => ({ wordOfDay: { ...s.wordOfDay, shuffleOrder: v } }));
+      get().initWordOfDay();
+    },
+    reshuffleWordOfDay: () => get().initWordOfDay(),
 
     // ── sheet settings ──
     setBingoCount: (v) => set((s) => ({ bingo: { ...s.bingo, count: Math.max(1, Math.min(30, v || 1)) } })),
