@@ -7,6 +7,7 @@ import { MissingWord } from '../activities/MissingWord';
 import { Flyswatter } from '../activities/Flyswatter';
 import { Matching } from '../activities/Matching';
 import { SentenceBuilder } from '../activities/SentenceBuilder';
+import { WordOfDay } from '../activities/WordOfDay';
 import { SheetWorkspace } from '../sheets/SheetWorkspace';
 
 export function Display() {
@@ -28,6 +29,8 @@ export function Display() {
       return <Matching />;
     case 'sentence':
       return <SentenceBuilder />;
+    case 'wordday':
+      return <WordOfDay />;
     case 'bingo':
     case 'flashcards':
     case 'wordsearch':
