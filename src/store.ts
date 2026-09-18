@@ -487,7 +487,26 @@ export const useStore = create<Store>((set, get) => {
         contentMode: preset === 'stylized' ? 'wordOnly' : s.contentMode,
       })),
     setContentMode: (mode) => set({ contentMode: mode }),
-    openSet: (id) => set({ currentSetId: id, view: 'display', carouselIndex: 0, selectedWordId: null }),
+    openSet: (id) => {
+      const changed = id !== get().currentSetId;
+      set({ currentSetId: id, view: 'display', carouselIndex: 0, selectedWordId: null });
+      // Opening a *different* word list means a fresh game — re-initialize the
+      // stateful projector activities so none of them show words, decks, or
+      // scores carried over from the previous list (B7). Only the activity that
+      // holds its own state needs this: Carousel's index is reset above, and
+      // Reveal / Word Wall / Sentence Builder / Word of the Day already key off
+      // the set id themselves. Skip when re-opening the same set so an
+      // in-progress round survives a trip back to the Library.
+      if (changed) {
+        const mode = get().displayMode;
+        if (mode === 'quiz') get().initQuiz();
+        if (mode === 'matching') get().initMatch();
+        set({
+          missingWord: { removedId: null, revealed: false, history: [] },
+          flyswatter: { scoreA: 0, scoreB: 0, lastWordId: null },
+        });
+      }
+    },
     openEditor: (id) => set({ currentSetId: id, view: 'editor' }),
 
     // ── zoom ──
