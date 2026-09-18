@@ -49,10 +49,20 @@ export function Flyswatter() {
         {set.words.map((w) => {
           const isLast = w.id === fly.lastWordId;
           return (
-            <button
+            // A div with role="button" rather than a <button>: the ImageSlot
+            // inside renders its own <button>, and a button-inside-a-button is
+            // invalid HTML (B6). This matches the Matching card pattern.
+            <div
               key={w.id}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => mark(w.id)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  mark(w.id);
+                }
+              }}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -63,6 +73,7 @@ export function Flyswatter() {
                 fontWeight: 800,
                 fontSize: 18,
                 cursor: 'pointer',
+                boxSizing: 'border-box',
                 background: isLast ? C.tealTint : C.surface,
                 color: C.ink,
                 border: `2px solid ${isLast ? C.teal : C.borderLight}`,
@@ -72,7 +83,7 @@ export function Flyswatter() {
                 <ImageSlot id={`slot-${w.id}`} fit="contain" shape="rounded" radius={12} placeholder="Image" />
               </div>
               <div>{w.text}</div>
-            </button>
+            </div>
           );
         })}
       </div>
