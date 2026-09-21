@@ -19,6 +19,7 @@ const MODE_LABELS: Record<DisplayMode, string> = {
   matching: 'Matching',
   sentence: 'Sentence Builder',
   wordday: 'Word of the Day',
+  category: 'Category Sort',
   bingo: 'Bingo',
   flashcards: 'Flash Cards',
   wordsearch: 'Word Search',

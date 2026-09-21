@@ -18,6 +18,14 @@ import { buildMatchDeck, type MatchCard, type MatchMode } from './generators/mat
 import type { SpellingPrompt } from './generators/spellingTest';
 import { buildSentenceSet, type SentenceCard, type SentenceMode } from './generators/sentenceBuilder';
 import { buildWordOfDay, type WordOfDayCard } from './generators/wordOfDay';
+import {
+  buildCategorySort,
+  buildBuckets,
+  clampBucketCount,
+  type SortChip,
+  type SortBucket,
+  type SortAssignments,
+} from './generators/categorySort';
 
 const STORAGE_KEY = 'vocabwall_v3';
 
@@ -97,6 +105,24 @@ export interface WordOfDayState {
   total: number;
 }
 
+// ── category-sort sub-state (CX5) ───────────────────────────────────────────
+// The chips + buckets come from the pure `buildCategorySort` generator; the
+// store owns the live sort: which bucket each chip has been dropped into. The
+// teacher's bucket count and labels persist per set (on the WordSet), so a class
+// re-opening a list finds the same categories. Assignments are the round's work
+// and reset when the board is (re)built.
+export interface CategoryState {
+  /** Word chips in presentation order (list order, or shuffled). */
+  chips: SortChip[];
+  /** The buckets chips are sorted into (2..4). */
+  buckets: SortBucket[];
+  /** chipId → bucketId it currently sits in (absent = still in the tray). */
+  assignments: SortAssignments;
+  shuffleOrder: boolean;
+  bucketCount: number;
+  total: number;
+}
+
 interface DragState {
   wordId: string;
   startX: number;
@@ -141,6 +167,7 @@ export interface StoreState {
   match: MatchState;
   sentence: SentenceState;
   wordOfDay: WordOfDayState;
+  category: CategoryState;
   printOpen: boolean;
   sheetEditorOpen: boolean;
   sheetColW: number;
@@ -251,6 +278,21 @@ export interface StoreActions {
   toggleWordOfDayReveal: () => void;
   setWordOfDayShuffle: (v: boolean) => void;
   reshuffleWordOfDay: () => void;
+  // category sort (CX5)
+  /** Build the board for the current set, reading its persisted buckets/labels. */
+  initCategory: () => void;
+  /** Drop a chip into a bucket. */
+  assignChip: (chipId: string, bucketId: string) => void;
+  /** Send a chip back to the unsorted tray. */
+  clearChip: (chipId: string) => void;
+  /** Empty every bucket back to the tray (start the round over). */
+  resetCategoryBoard: () => void;
+  /** Rename a bucket (persists per set). */
+  setBucketLabel: (index: number, label: string) => void;
+  /** Change how many buckets there are, 2..4 (persists per set). */
+  setBucketCount: (n: number) => void;
+  setCategoryShuffle: (v: boolean) => void;
+  reshuffleCategory: () => void;
   // sheet settings
   setBingoCount: (v: number) => void;
   setBingoGridSize: (v: string) => void;
@@ -471,6 +513,7 @@ export const useStore = create<Store>((set, get) => {
     },
     sentence: { mode: 'mixed', cards: [], index: 0, revealed: false, shuffleOrder: false, total: 0 },
     wordOfDay: { cards: [], index: 0, revealed: false, shuffleOrder: false, total: 0 },
+    category: { chips: [], buckets: [], assignments: {}, shuffleOrder: false, bucketCount: 2, total: 0 },
     printOpen: false,
     sheetEditorOpen: false,
     sheetColW: 900,
@@ -491,6 +534,7 @@ export const useStore = create<Store>((set, get) => {
       if (mode === 'matching') get().initMatch();
       if (mode === 'sentence') get().initSentence();
       if (mode === 'wordday') get().initWordOfDay();
+      if (mode === 'category') get().initCategory();
       if (mode !== 'carousel') {
         set({ carouselPlaying: false });
         get().restartCarouselTimer();
@@ -516,6 +560,7 @@ export const useStore = create<Store>((set, get) => {
         const mode = get().displayMode;
         if (mode === 'quiz') get().initQuiz();
         if (mode === 'matching') get().initMatch();
+        if (mode === 'category') get().initCategory();
         set({
           missingWord: { removedId: null, revealed: false, history: [] },
           flyswatter: { scoreA: 0, scoreB: 0, lastWordId: null },
@@ -1049,6 +1094,83 @@ export const useStore = create<Store>((set, get) => {
       get().initWordOfDay();
     },
     reshuffleWordOfDay: () => get().initWordOfDay(),
+
+    // ── category sort (CX5) ──
+    initCategory: () => {
+      const s = getCurrentSet();
+      const st = get().category;
+      // The teacher's bucket count + labels persist on the set; fall back to the
+      // live state (or defaults) for a set that has never been sorted before.
+      const cfg = s.categorySort;
+      const bucketCount = clampBucketCount(cfg ? cfg.bucketCount : st.bucketCount);
+      const labels = cfg ? cfg.labels : [];
+      const data = buildCategorySort(s.words, { shuffleOrder: st.shuffleOrder, bucketCount, labels });
+      set({
+        category: {
+          ...st,
+          chips: data.chips,
+          buckets: data.buckets,
+          total: data.total,
+          bucketCount,
+          assignments: {}, // a fresh board — nothing sorted yet
+        },
+      });
+    },
+    assignChip: (chipId, bucketId) =>
+      set((s) => ({ category: { ...s.category, assignments: { ...s.category.assignments, [chipId]: bucketId } } })),
+    clearChip: (chipId) =>
+      set((s) => {
+        const next = { ...s.category.assignments };
+        delete next[chipId];
+        return { category: { ...s.category, assignments: next } };
+      }),
+    resetCategoryBoard: () => set((s) => ({ category: { ...s.category, assignments: {} } })),
+    setBucketLabel: (index, label) => {
+      // Update the live bucket heading, and persist it on the set so the class
+      // finds the same categories next time this list is opened.
+      set((s) => {
+        const buckets = s.category.buckets.map((b, i) =>
+          i === index ? { ...b, label: label } : b,
+        );
+        return { category: { ...s.category, buckets } };
+      });
+      const labels = get().category.buckets.map((b) => b.label);
+      mutateSets((sets) =>
+        sets.map((st) =>
+          st.id === get().currentSetId
+            ? { ...st, categorySort: { bucketCount: get().category.bucketCount, labels } }
+            : st,
+        ),
+      );
+    },
+    setBucketCount: (n) => {
+      const count = clampBucketCount(n);
+      const labels = get().category.buckets.map((b) => b.label);
+      const buckets = buildBuckets(count, labels);
+      const valid = new Set(buckets.map((b) => b.id));
+      // Keep assignments that still point at a surviving bucket; drop the rest
+      // back to the tray so no chip is stranded in a removed bucket.
+      set((s) => {
+        const next: SortAssignments = {};
+        for (const [chipId, bucketId] of Object.entries(s.category.assignments)) {
+          if (typeof bucketId === 'string' && valid.has(bucketId)) next[chipId] = bucketId;
+        }
+        return { category: { ...s.category, bucketCount: count, buckets, assignments: next } };
+      });
+      const persistedLabels = buckets.map((b) => b.label);
+      mutateSets((sets) =>
+        sets.map((st) =>
+          st.id === get().currentSetId
+            ? { ...st, categorySort: { bucketCount: count, labels: persistedLabels } }
+            : st,
+        ),
+      );
+    },
+    setCategoryShuffle: (v) => {
+      set((s) => ({ category: { ...s.category, shuffleOrder: v } }));
+      get().initCategory();
+    },
+    reshuffleCategory: () => get().initCategory(),
 
     // ── sheet settings ──
     setBingoCount: (v) => set((s) => ({ bingo: { ...s.bingo, count: Math.max(1, Math.min(30, v || 1)) } })),
