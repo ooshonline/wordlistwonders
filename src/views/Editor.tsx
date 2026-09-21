@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useStore, currentSet } from '../store';
 import type { Tier, Voice } from '../types';
 import { C, DISPLAY, RAINBOW } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
 import { Icon, SegControl, icons } from '../components/ui';
+import { serializeSet, setFilename, parseSetFile } from '../setIO';
 
 const TIERS: { value: Tier; label: string }[] = [
   { value: 'key', label: 'Key' },
@@ -27,11 +28,49 @@ export function Editor() {
   const setWordColor = useStore((s) => s.setWordColor);
   const toggleRecorded = useStore((s) => s.toggleRecorded);
   const speakWord = useStore((s) => s.speakWord);
+  const importSet = useStore((s) => s.importSet);
+  const notify = useStore((s) => s.notify);
 
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
 
   if (!set) return null;
+
+  // Export the current set to a downloadable .json file the teacher can back up
+  // or share; import reads one back into a brand-new set (F2). Both are fully
+  // client-side — no server, no network call.
+  const handleExport = () => {
+    try {
+      const blob = new Blob([serializeSet(set)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = setFilename(set.name);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      notify("Sorry — couldn't export this list.");
+    }
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // let the same file be picked again later
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        importSet(parseSetFile(String(reader.result)));
+      } catch (err) {
+        notify(err instanceof Error ? err.message : "Sorry — couldn't read that file.");
+      }
+    };
+    reader.onerror = () => notify("Sorry — couldn't read that file.");
+    reader.readAsText(file);
+  };
 
   // Split a pasted blob on newlines and commas into individual words.
   const parsedWords = pasteText
@@ -47,7 +86,7 @@ export function Editor() {
 
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 32 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
         <button type="button" aria-label="Back" onClick={goDisplay} style={backBtn}>
           <Icon path={icons.back} size={18} />
         </button>
@@ -61,10 +100,29 @@ export function Editor() {
             border: 'none',
             background: 'transparent',
             padding: '4px 8px',
+            flex: '1 1 200px',
+            minWidth: 0,
             maxWidth: 520,
             color: C.ink,
           }}
         />
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button type="button" onClick={handleExport} style={fileBtn} title="Download this list as a file">
+            <Icon path={icons.download} size={16} />
+            Export
+          </button>
+          <button type="button" onClick={() => fileRef.current?.click()} style={fileBtn} title="Load a list from a file">
+            <Icon path={icons.upload} size={16} />
+            Import
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={handleImportFile}
+            style={{ display: 'none' }}
+          />
+        </div>
       </div>
 
       <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginBottom: 20, maxWidth: 940 }}>
@@ -315,6 +373,19 @@ const backBtn: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
+  cursor: 'pointer',
+};
+const fileBtn: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 7,
+  padding: '9px 16px',
+  borderRadius: 12,
+  background: C.surface,
+  border: `2px solid ${C.borderLight}`,
+  color: C.ink,
+  fontWeight: 800,
+  fontSize: 14,
   cursor: 'pointer',
 };
 const metaInput: React.CSSProperties = {

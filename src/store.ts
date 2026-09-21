@@ -118,6 +118,8 @@ export interface StoreState {
   stylePreset: StylePreset;
   contentMode: ContentMode;
   toast: string | null;
+  /** Whether the visible toast offers an Undo action (delete toasts) or is a plain notice (import/export). */
+  toastCanUndo: boolean;
   librarySearch: string;
   missingWord: { removedId: string | null; revealed: boolean; history: string[] };
   flyswatter: { scoreA: number; scoreB: number; lastWordId: string | null };
@@ -171,6 +173,8 @@ export interface StoreActions {
   createSet: () => void;
   duplicateSet: (id: string) => void;
   deleteSet: (id: string) => void;
+  /** Add an already-parsed set (from an imported JSON file, F2), open it in the editor. */
+  importSet: (set: WordSet) => void;
   // editor
   setSetName: (v: string) => void;
   setSetTheme: (v: string) => void;
@@ -191,6 +195,8 @@ export interface StoreActions {
   // toast / undo
   dismissToast: () => void;
   undoToast: () => void;
+  /** Show a plain, auto-dismissing notice with no Undo action (import/export feedback). */
+  notify: (message: string) => void;
   // grid drag/resize
   startDrag: (e: React.MouseEvent, wordId: string, origin: { x: number; y: number }) => void;
   startResize: (e: React.MouseEvent, wordId: string) => void;
@@ -344,11 +350,19 @@ export const useStore = create<Store>((set, get) => {
   const showUndoToast = (message: string, restoreFn: () => void) => {
     if (toastTimer) clearTimeout(toastTimer);
     pendingUndo = restoreFn;
-    set({ toast: message });
+    set({ toast: message, toastCanUndo: true });
     toastTimer = setTimeout(() => {
       pendingUndo = null;
       set({ toast: null });
     }, 6000);
+  };
+
+  // A plain notice (no Undo) — used for import/export feedback and errors.
+  const showNotice = (message: string) => {
+    if (toastTimer) clearTimeout(toastTimer);
+    pendingUndo = null;
+    set({ toast: message, toastCanUndo: false });
+    toastTimer = setTimeout(() => set({ toast: null }), 6000);
   };
 
   const buildQuizOptions = (targetId: string, words: Word[]): Word[] => {
@@ -407,6 +421,7 @@ export const useStore = create<Store>((set, get) => {
     stylePreset: 'card',
     contentMode: 'both',
     toast: null,
+    toastCanUndo: false,
     librarySearch: '',
     missingWord: { removedId: null, revealed: false, history: [] },
     flyswatter: { scoreA: 0, scoreB: 0, lastWordId: null },
@@ -577,6 +592,14 @@ export const useStore = create<Store>((set, get) => {
         ),
       );
     },
+    importSet: (imported) => {
+      mutateSets(
+        (sets) => [...sets, imported],
+        () => set({ currentSetId: imported.id, view: 'editor' }),
+      );
+      const n = imported.words.length;
+      showNotice(`Imported "${imported.name}" — ${n} ${n === 1 ? 'word' : 'words'}.`);
+    },
 
     // ── editor ──
     setSetName: (v) => mutateSets((sets) => sets.map((s) => (s.id === get().currentSetId ? { ...s, name: v } : s))),
@@ -660,6 +683,7 @@ export const useStore = create<Store>((set, get) => {
       pendingUndo = null;
       set({ toast: null });
     },
+    notify: (message) => showNotice(message),
 
     // ── grid drag / resize ──
     startDrag: (e, wordId, origin) => {

@@ -343,6 +343,7 @@ function Toolbar() {
 
 function Toast() {
   const toast = useStore((s) => s.toast);
+  const canUndo = useStore((s) => s.toastCanUndo);
   const undo = useStore((s) => s.undoToast);
   const dismiss = useStore((s) => s.dismissToast);
   return (
@@ -363,9 +364,11 @@ function Toast() {
       }}
     >
       <span style={{ fontSize: 14, fontWeight: 600 }}>{toast}</span>
-      <button type="button" onClick={undo} style={{ background: 'none', border: 'none', color: C.green, fontWeight: 800, cursor: 'pointer', fontSize: 14 }}>
-        Undo
-      </button>
+      {canUndo && (
+        <button type="button" onClick={undo} style={{ background: 'none', border: 'none', color: C.green, fontWeight: 800, cursor: 'pointer', fontSize: 14 }}>
+          Undo
+        </button>
+      )}
       <button type="button" aria-label="Dismiss" onClick={dismiss} style={{ background: 'none', border: 'none', color: '#fff', opacity: 0.6, cursor: 'pointer', fontSize: 16 }}>
         ×
       </button>
