@@ -42,6 +42,8 @@ export interface WordSet {
   printBlanks?: Record<string, boolean>;
   printMode?: PrintMode;
   printRandomPercent?: number;
+  /** Category Sort (CX5): the teacher's bucket count + labels, persisted per set. */
+  categorySort?: { bucketCount: number; labels: string[] };
 }
 
 export type View = 'home' | 'library' | 'editor' | 'display';
@@ -56,6 +58,7 @@ export type DisplayMode =
   | 'matching'
   | 'sentence'
   | 'wordday'
+  | 'category'
   | 'flashcards'
   | 'bingo'
   | 'wordsearch'
