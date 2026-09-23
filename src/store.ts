@@ -22,6 +22,7 @@ import {
   buildCategorySort,
   buildBuckets,
   clampBucketCount,
+  CATEGORY_MIN_BUCKETS,
   type SortChip,
   type SortBucket,
   type SortAssignments,
@@ -1101,8 +1102,12 @@ export const useStore = create<Store>((set, get) => {
       const st = get().category;
       // The teacher's bucket count + labels persist on the set; fall back to the
       // live state (or defaults) for a set that has never been sorted before.
+      // A set remembers its own bucket count + labels (on `categorySort`). A set
+      // that has never been sorted starts at the default count with default
+      // headings — it must NOT inherit the previous set's live config, or opening
+      // a fresh list would show the last list's group count.
       const cfg = s.categorySort;
-      const bucketCount = clampBucketCount(cfg ? cfg.bucketCount : st.bucketCount);
+      const bucketCount = clampBucketCount(cfg ? cfg.bucketCount : CATEGORY_MIN_BUCKETS);
       const labels = cfg ? cfg.labels : [];
       const data = buildCategorySort(s.words, { shuffleOrder: st.shuffleOrder, bucketCount, labels });
       set({
