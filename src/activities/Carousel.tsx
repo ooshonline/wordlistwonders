@@ -90,7 +90,7 @@ export function Carousel() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
         <button
           type="button"
-          aria-label="Play/Pause"
+          aria-label={playing ? 'Pause' : 'Play'}
           onClick={togglePlay}
           style={{
             width: 48,
@@ -106,7 +106,7 @@ export function Carousel() {
             boxShadow: `0 4px 0 ${C.greenShadow}`,
           }}
         >
-          {playing ? '❚❚' : '▶'}
+          <Icon path={playing ? icons.mediaPause : icons.mediaPlay} size={22} />
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <label style={{ fontSize: 14, fontWeight: 700, opacity: 0.7 }}>Seconds/word</label>

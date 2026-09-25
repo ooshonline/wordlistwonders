@@ -234,6 +234,15 @@ export const icons = {
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
     </>
   ),
+  // Media transport glyphs (filled via fill="currentColor" on the path so they
+  // read as solid shapes, like the rest of the 24×24 stroke set).
+  mediaPlay: <path d="M7 4.5v15l12.5-7.5L7 4.5z" fill="currentColor" />,
+  mediaPause: (
+    <>
+      <rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor" />
+      <rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor" />
+    </>
+  ),
   mic: (
     <>
       <path d="M12 19v3" />
