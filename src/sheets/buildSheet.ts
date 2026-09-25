@@ -5,6 +5,7 @@ import { buildBingoCards } from '../generators/bingo';
 import { buildWordSearch } from '../generators/wordsearch';
 import { buildCrossword } from '../generators/crossword';
 import { buildSpellingTest, spellingPages, type SpellingPrompt } from '../generators/spellingTest';
+import { alphabetize, buildWordScramble, scramblePages, type ScrambleHint } from '../generators/wordScramble';
 import type { StoreState } from '../store';
 
 /** Free-distribution credit stamped on printed worksheets when opted in (M1). */
@@ -95,7 +96,30 @@ export interface SpellingPage {
   showNameLine: boolean;
   credit?: string;
 }
-export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage;
+export interface ScrambleItemView {
+  num: number;
+  /** The jumbled letters the student unscrambles. */
+  scrambled: string;
+  /** The real word — rendered only on the answer key. */
+  answer: string;
+  /** First letter, pre-printed on the line when the first-letter hint is on. */
+  firstLetter: string;
+  slotId: string;
+  showAnswer: boolean;
+}
+export interface ScramblePage {
+  kind: 'scramble';
+  items: ScrambleItemView[];
+  hint: ScrambleHint;
+  /** Alphabetized answers for the word bank box (empty = no bank). */
+  wordBank: string[];
+  isKey: boolean;
+  title: string;
+  subtitle: string;
+  showNameLine: boolean;
+  credit?: string;
+}
+export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage | ScramblePage;
 
 export interface SheetData {
   pages: SheetPage[];
@@ -292,6 +316,42 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
     kindLabel = 'Spelling Test';
     summary = `${wordCount} · ${pages.length} page(s)`;
     if (test.total === 0) warning = 'Add some words to this list to build a spelling test.';
+  } else if (kind === 'scramble') {
+    const sc = state.scramble;
+    // Scrambles are random, so they only re-roll on Shuffle (salt) — the preview
+    // stays stable between renders, and the puzzle + key pages share one build.
+    const puzzle = memoPuzzle(
+      `scramble|${sig}|${sc.perPage}|${sc.shuffleOrder}|${state.salt.scramble}`,
+      () => buildWordScramble(words, { perPage: sc.perPage, shuffleOrder: sc.shuffleOrder }),
+    );
+    const chunks = scramblePages(puzzle);
+    const wordCount = `${puzzle.total} word${puzzle.total === 1 ? '' : 's'}`;
+    const mkPage = (chunk: typeof chunks[number], idx: number, isKey: boolean): ScramblePage => ({
+      kind: 'scramble',
+      items: chunk.map((it) => ({
+        num: it.num,
+        scrambled: it.scrambled,
+        answer: it.answer,
+        firstLetter: it.firstLetter,
+        slotId: it.slotId,
+        showAnswer: isKey,
+      })),
+      hint: sc.hint,
+      // Each student page banks just its own answers; the key doesn't need one.
+      wordBank: sc.wordBank && !isKey ? alphabetize(chunk) : [],
+      isKey,
+      title: listName + ' — Word Scramble' + (isKey ? ' (Answer Key)' : ''),
+      subtitle: wordCount + (chunks.length > 1 ? ` · Page ${idx + 1} of ${chunks.length}` : ''),
+      showNameLine: !isKey,
+    });
+    chunks.forEach((chunk, i) => pages.push(mkPage(chunk, i, false)));
+    if (sc.answerKey) chunks.forEach((chunk, i) => pages.push(mkPage(chunk, i, true)));
+    kindLabel = 'Word Scramble';
+    summary = `${wordCount} · ${pages.length} page(s)`;
+    const skipped = words.filter((w) => (w.text || '').trim()).length - puzzle.total;
+    if (puzzle.total === 0) warning = 'Add some words to this list to build a word scramble.';
+    else if (skipped > 0)
+      warning = `${skipped} word(s) are too short to scramble (one letter, or all the same letter), so they're left out.`;
   }
 
   // Stamp the opt-in credit line onto every page (off by default).
