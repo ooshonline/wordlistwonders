@@ -16,6 +16,7 @@ import { fillMissingClues } from './generators/clueSuggest';
 import { autoPos as wallAutoPos } from './activities/wallLayout';
 import { buildMatchDeck, type MatchCard, type MatchMode } from './generators/matching';
 import type { SpellingPrompt } from './generators/spellingTest';
+import type { ScrambleHint } from './generators/wordScramble';
 import { buildSentenceSet, type SentenceCard, type SentenceMode } from './generators/sentenceBuilder';
 import { buildWordOfDay, type WordOfDayCard } from './generators/wordOfDay';
 import {
@@ -155,6 +156,7 @@ export interface StoreState {
   wordsearch: { size: number; diagonals: boolean; backwards: boolean; answerKey: boolean };
   crossword: { answerKey: boolean };
   spelling: { prompt: SpellingPrompt; perPage: number; shuffleOrder: boolean; answerKey: boolean };
+  scramble: { hint: ScrambleHint; wordBank: boolean; perPage: number; shuffleOrder: boolean; answerKey: boolean };
   currentSetId: string;
   selectedWordId: string | null;
   dragging: DragState | null;
@@ -175,7 +177,7 @@ export interface StoreState {
   /** Optional "Made with Wordlist Wonders" credit line on printed worksheets. */
   printCredit: boolean;
   /** Per-kind shuffle salt; incrementing busts the puzzle memo cache. */
-  salt: { bingo: number; wordsearch: number; crossword: number; spelling: number };
+  salt: { bingo: number; wordsearch: number; crossword: number; spelling: number; scramble: number };
   sets: WordSet[];
 }
 
@@ -312,7 +314,12 @@ export interface StoreActions {
   setSpellingPerPage: (v: number) => void;
   setSpellingShuffle: (v: boolean) => void;
   setSpellingAnswerKey: (v: boolean) => void;
-  reshuffleSheet: (kind: 'bingo' | 'wordsearch' | 'crossword' | 'spelling') => void;
+  setScrambleHint: (v: ScrambleHint) => void;
+  setScrambleWordBank: (v: boolean) => void;
+  setScramblePerPage: (v: number) => void;
+  setScrambleShuffle: (v: boolean) => void;
+  setScrambleAnswerKey: (v: boolean) => void;
+  reshuffleSheet: (kind: 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble') => void;
   toggleSheetEditor: () => void;
   setSheetColW: (w: number) => void;
   setPrintCredit: (v: boolean) => void;
@@ -473,6 +480,7 @@ export const useStore = create<Store>((set, get) => {
     wordsearch: { size: 12, diagonals: true, backwards: false, answerKey: false },
     crossword: { answerKey: false },
     spelling: { prompt: 'readAloud', perPage: 10, shuffleOrder: false, answerKey: true },
+    scramble: { hint: 'none', wordBank: true, perPage: 10, shuffleOrder: false, answerKey: true },
     currentSetId: initial.currentSetId,
     selectedWordId: null,
     dragging: null,
@@ -519,7 +527,7 @@ export const useStore = create<Store>((set, get) => {
     sheetEditorOpen: false,
     sheetColW: 900,
     printCredit: false,
-    salt: { bingo: 0, wordsearch: 0, crossword: 0, spelling: 0 },
+    salt: { bingo: 0, wordsearch: 0, crossword: 0, spelling: 0, scramble: 0 },
     sets: initial.sets,
 
     // ── navigation ──
@@ -1195,6 +1203,11 @@ export const useStore = create<Store>((set, get) => {
     setSpellingPerPage: (v) => set((s) => ({ spelling: { ...s.spelling, perPage: v } })),
     setSpellingShuffle: (v) => set((s) => ({ spelling: { ...s.spelling, shuffleOrder: v } })),
     setSpellingAnswerKey: (v) => set((s) => ({ spelling: { ...s.spelling, answerKey: v } })),
+    setScrambleHint: (v) => set((s) => ({ scramble: { ...s.scramble, hint: v } })),
+    setScrambleWordBank: (v) => set((s) => ({ scramble: { ...s.scramble, wordBank: v } })),
+    setScramblePerPage: (v) => set((s) => ({ scramble: { ...s.scramble, perPage: v } })),
+    setScrambleShuffle: (v) => set((s) => ({ scramble: { ...s.scramble, shuffleOrder: v } })),
+    setScrambleAnswerKey: (v) => set((s) => ({ scramble: { ...s.scramble, answerKey: v } })),
     reshuffleSheet: (kind) => set((s) => ({ salt: { ...s.salt, [kind]: s.salt[kind] + 1 } })),
     toggleSheetEditor: () => set((s) => ({ sheetEditorOpen: !s.sheetEditorOpen })),
     setSheetColW: (w) => set({ sheetColW: w }),

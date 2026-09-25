@@ -71,6 +71,7 @@ export function SheetPageView({ page }: { page: SheetPage }) {
       {page.kind === 'search' && <SearchBody page={page} />}
       {page.kind === 'cross' && <CrossBody page={page} />}
       {page.kind === 'spelling' && <SpellingBody page={page} />}
+      {page.kind === 'scramble' && <ScrambleBody page={page} />}
 
       {page.credit && (
         <div
@@ -285,6 +286,102 @@ const spellAnswer: CSSProperties = {
   fontWeight: 800,
   color: C.tealInk,
   letterSpacing: '0.02em',
+};
+
+function ScrambleBody({ page }: { page: Extract<SheetPage, { kind: 'scramble' }> }) {
+  const withPicture = page.hint === 'picture';
+  const instruction = page.isKey
+    ? 'Answer key — the unscrambled word for every item.'
+    : page.wordBank.length
+      ? 'Unscramble the letters to make a word from the word bank. Write it on the line.'
+      : 'Unscramble the letters to make a word. Write it on the line.';
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.placeholderInk }}>{instruction}</div>
+
+      {page.wordBank.length > 0 && (
+        <div
+          style={{
+            border: `2px solid ${C.borderLight}`,
+            borderRadius: 12,
+            padding: '10px 14px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'baseline',
+            gap: '6px 18px',
+          }}
+        >
+          <span style={{ ...scrambleLabel, marginRight: 4 }}>Word bank</span>
+          {page.wordBank.map((word, i) => (
+            <span key={i} style={{ fontSize: 16, fontWeight: 700 }}>
+              {word}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div
+        style={{
+          display: 'grid',
+          // Picture cards are tall, so they go four across to keep 12 on a page.
+          gridTemplateColumns: `repeat(${withPicture ? 4 : 2}, minmax(0,1fr))`,
+          gap: withPicture ? '22px 20px' : '26px 40px',
+          alignContent: 'start',
+        }}
+      >
+        {page.items.map((it) => (
+          <div key={it.num} style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0 }}>
+            {withPicture && (
+              <div
+                style={{
+                  height: 92,
+                  border: `2px solid ${C.borderLight}`,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  background: '#ffffff',
+                }}
+              >
+                <ImageSlot id={it.slotId} fit="contain" shape="rounded" radius={10} placeholder="" />
+              </div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, minWidth: 0 }}>
+              <span style={spellNum}>{it.num}.</span>
+              <span style={{ ...scrambleLetters, fontSize: withPicture ? 18 : 22 }}>{it.scrambled}</span>
+            </div>
+            <div style={{ ...spellLine, marginLeft: withPicture ? 0 : 40 }}>
+              {it.showAnswer ? (
+                <span style={spellAnswer}>{it.answer}</span>
+              ) : (
+                page.hint === 'firstLetter' && <span style={scrambleFirst}>{it.firstLetter}</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const scrambleLabel: CSSProperties = {
+  fontSize: 11,
+  fontWeight: 800,
+  textTransform: 'uppercase',
+  letterSpacing: '0.08em',
+  color: C.placeholderInk,
+};
+const scrambleLetters: CSSProperties = {
+  fontFamily: DISPLAY,
+  fontSize: 22,
+  fontWeight: 800,
+  letterSpacing: '0.18em',
+  overflowWrap: 'anywhere',
+  minWidth: 0,
+};
+const scrambleFirst: CSSProperties = {
+  fontSize: 19,
+  fontWeight: 800,
+  color: C.placeholderInk,
 };
 
 function CrossBody({ page }: { page: Extract<SheetPage, { kind: 'cross' }> }) {

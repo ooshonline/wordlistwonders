@@ -43,7 +43,7 @@ export function SheetWorkspace() {
     () => buildSheet(kind, set, state),
     // Rebuild when inputs that affect the sheet change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.salt, state.printCredit],
+    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.scramble, state.salt, state.printCredit],
   );
 
   // Live preview zoom from the measured column width.
@@ -103,7 +103,7 @@ export function SheetWorkspace() {
           {data.showShuffle && (
             <button
               type="button"
-              onClick={() => reshuffle(kind as 'bingo' | 'wordsearch' | 'crossword' | 'spelling')}
+              onClick={() => reshuffle(kind as 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble')}
               style={outlineBtn}
             >
               Shuffle
@@ -407,6 +407,12 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
   const setSpellingPerPage = useStore((s) => s.setSpellingPerPage);
   const setSpellingShuffle = useStore((s) => s.setSpellingShuffle);
   const setSpellingAnswerKey = useStore((s) => s.setSpellingAnswerKey);
+  const scramble = useStore((s) => s.scramble);
+  const setScrambleHint = useStore((s) => s.setScrambleHint);
+  const setScrambleWordBank = useStore((s) => s.setScrambleWordBank);
+  const setScramblePerPage = useStore((s) => s.setScramblePerPage);
+  const setScrambleShuffle = useStore((s) => s.setScrambleShuffle);
+  const setScrambleAnswerKey = useStore((s) => s.setScrambleAnswerKey);
 
   if (kind === 'bingo') {
     return (
@@ -577,6 +583,60 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
           name="vw-spellkey"
           value={spelling.answerKey}
           onChange={setSpellingAnswerKey}
+          options={[
+            { value: true, label: 'Include' },
+            { value: false, label: 'Skip' },
+          ]}
+        />
+      </>
+    );
+  }
+  if (kind === 'scramble') {
+    return (
+      <>
+        <LabeledSeg
+          label="Hint"
+          name="vw-scrhint"
+          value={scramble.hint}
+          onChange={setScrambleHint}
+          options={[
+            { value: 'none', label: 'None' },
+            { value: 'firstLetter', label: 'First letter' },
+            { value: 'picture', label: 'Picture' },
+          ]}
+        />
+        <LabeledSeg
+          label="Word bank"
+          name="vw-scrbank"
+          value={scramble.wordBank}
+          onChange={setScrambleWordBank}
+          options={[
+            { value: true, label: 'Show' },
+            { value: false, label: 'Hide' },
+          ]}
+        />
+        <LabeledSeg
+          label="Per page"
+          name="vw-scrper"
+          value={scramble.perPage}
+          onChange={setScramblePerPage}
+          options={[6, 8, 10, 12].map((n) => ({ value: n, label: String(n) }))}
+        />
+        <LabeledSeg
+          label="Order"
+          name="vw-scrorder"
+          value={scramble.shuffleOrder}
+          onChange={setScrambleShuffle}
+          options={[
+            { value: false, label: 'List order' },
+            { value: true, label: 'Shuffle' },
+          ]}
+        />
+        <LabeledSeg
+          label="Answer key"
+          name="vw-scrkey"
+          value={scramble.answerKey}
+          onChange={setScrambleAnswerKey}
           options={[
             { value: true, label: 'Include' },
             { value: false, label: 'Skip' },

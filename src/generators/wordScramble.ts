@@ -11,12 +11,17 @@
 import type { Tier, Word } from '../types';
 import { shuffle } from './random';
 
-/** Upper bound on numbered items per printed page (keeps a page legible). */
-export const SCRAMBLE_MAX_PER_PAGE = 20;
+/** Upper bound on numbered items per printed page. Each item is a jumbled word
+ *  plus a writing line (and maybe a picture), so this stays well below the
+ *  spelling test's cap to keep every page inside one US-Letter sheet. */
+export const SCRAMBLE_MAX_PER_PAGE = 12;
 /** Default items per page when the caller doesn't specify. */
 export const SCRAMBLE_DEFAULT_PER_PAGE = 10;
 /** Random shuffles tried before falling back to a guaranteed rotation. */
 const SCRAMBLE_TRIES = 12;
+
+/** What extra help each item shows: nothing, the first letter, or its picture. */
+export type ScrambleHint = 'none' | 'firstLetter' | 'picture';
 
 export interface ScrambleItem {
   /** 1-based question number as printed on the sheet. */
@@ -127,11 +132,12 @@ export function buildWordScramble(words: Word[], options: ScrambleOptions = {}):
     };
   });
 
-  const wordBank = items
-    .map((it) => it.answer)
-    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  return { items, total: items.length, wordBank: alphabetize(items), perPage };
+}
 
-  return { items, total: items.length, wordBank, perPage };
+/** Answers of the given items in ABC order (case-insensitive) — a word bank. */
+export function alphabetize(items: ScrambleItem[]): string[] {
+  return items.map((it) => it.answer).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 }
 
 /** Split the numbered items into pages of `data.perPage`, in order. */

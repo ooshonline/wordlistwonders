@@ -39,6 +39,7 @@ export function Display() {
     case 'wordsearch':
     case 'crossword':
     case 'spelling':
+    case 'scramble':
       return <SheetWorkspace />;
     default:
       return null;
