@@ -1,7 +1,7 @@
 import { useStore, currentSet } from '../store';
 import { C } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
-import { Icon, icons } from '../components/ui';
+import { Icon, icons, Kbd, KeyTip } from '../components/ui';
 import { contentBoxStyle } from '../components/wordCard';
 
 export function Carousel() {
@@ -123,6 +123,11 @@ export function Carousel() {
           {words.length ? `${carIdx + 1} / ${words.length}` : '0 / 0'}
         </div>
       </div>
+      {words.length > 0 && (
+        <KeyTip>
+          Tip: <Kbd>←</Kbd> <Kbd>→</Kbd> (or a clicker) to move, <Kbd>Space</Kbd> to play or pause.
+        </KeyTip>
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useStore, currentSet } from '../store';
 import type { QuizState } from '../store';
 import { C, DISPLAY } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
-import { SegControl } from '../components/ui';
+import { SegControl, Kbd, KeyTip } from '../components/ui';
 
 const TEAM_NAMES = ['Team A', 'Team B', 'Team C', 'Team D'];
 
@@ -217,10 +217,10 @@ export function Quiz() {
             })}
           </div>
           {(quiz.options || []).length > 0 && (
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.ink2, opacity: 0.85, textAlign: 'center' }}>
-              Tip: press <kbd style={kbd}>1</kbd>–<kbd style={kbd}>{Math.min(9, (quiz.options || []).length)}</kbd> to
-              answer, <kbd style={kbd}>Enter</kbd> for the next word.
-            </div>
+            <KeyTip>
+              Tip: press <Kbd>1</Kbd>–<Kbd>{Math.min(9, (quiz.options || []).length)}</Kbd> to answer,{' '}
+              <Kbd>Enter</Kbd> for the next word.
+            </KeyTip>
           )}
           <div
             style={{
@@ -336,20 +336,6 @@ function TimerRing({ timeLeft, total }: { timeLeft: number; total: number }) {
     </div>
   );
 }
-
-const kbd: React.CSSProperties = {
-  display: 'inline-block',
-  minWidth: 20,
-  padding: '1px 6px',
-  borderRadius: 6,
-  background: C.surface,
-  border: `1px solid ${C.borderLight}`,
-  boxShadow: `0 1px 0 ${C.borderLight}`,
-  fontFamily: "'Nunito', sans-serif",
-  fontWeight: 800,
-  fontSize: 12,
-  color: C.ink,
-};
 const scoreCard: React.CSSProperties = {
   background: C.surface,
   borderRadius: 18,

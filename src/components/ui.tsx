@@ -173,6 +173,39 @@ export function OutlineButton({
 }
 
 // Common SVG icons (24×24, stroke-2, currentColor) used across views.
+/** A small keyboard-key chip for on-screen shortcut tips. */
+export function Kbd({ children }: { children: ReactNode }) {
+  return (
+    <kbd
+      style={{
+        display: 'inline-block',
+        minWidth: 20,
+        padding: '1px 6px',
+        borderRadius: 6,
+        background: C.surface,
+        border: `1px solid ${C.borderLight}`,
+        boxShadow: `0 1px 0 ${C.borderLight}`,
+        fontFamily: BODY,
+        fontWeight: 800,
+        fontSize: 12,
+        color: C.ink,
+        textAlign: 'center',
+      }}
+    >
+      {children}
+    </kbd>
+  );
+}
+
+/** Quiet one-line shortcut tip shown under a projector activity. */
+export function KeyTip({ children }: { children: ReactNode }) {
+  return (
+    <div className="vw-key-tip" style={{ fontSize: 13, fontWeight: 700, color: C.ink2, opacity: 0.85, textAlign: 'center' }}>
+      {children}
+    </div>
+  );
+}
+
 export function Icon({ path, size = 18 }: { path: ReactNode; size?: number }) {
   return (
     <svg

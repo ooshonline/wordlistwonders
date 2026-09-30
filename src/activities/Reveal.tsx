@@ -2,6 +2,8 @@ import { useStore, currentSet } from '../store';
 import { C } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
 import { contentBoxStyle } from '../components/wordCard';
+import { Kbd, KeyTip } from '../components/ui';
+import { useActivityKeys, FORWARD_KEYS, BACK_KEYS } from '../components/activityKeys';
 
 export function Reveal() {
   const set = useStore(currentSet);
@@ -13,9 +15,32 @@ export function Reveal() {
 
   const revealed = revealedBySet[currentSetId] || {};
 
+  // Forward keys (Space, →, a clicker's PageDown) reveal the next hidden card in
+  // order; back keys hide the most recently revealed one (last in order).
+  useActivityKeys((key) => {
+    if (FORWARD_KEYS.includes(key)) {
+      const nextHidden = set.words.find((w) => !revealed[w.id]);
+      if (nextHidden) toggleReveal(nextHidden.id);
+      return true;
+    }
+    if (BACK_KEYS.includes(key)) {
+      const lastShown = [...set.words].reverse().find((w) => revealed[w.id]);
+      if (lastShown) toggleReveal(lastShown.id);
+      return true;
+    }
+    return false;
+  });
+
   return (
     <div style={{ flex: 1, overflow: 'auto', padding: 32 }}>
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
+        {set.words.length > 0 ? (
+          <KeyTip>
+            Tip: <Kbd>Space</Kbd> or <Kbd>→</Kbd> reveals the next card, <Kbd>←</Kbd> hides it again.
+          </KeyTip>
+        ) : (
+          <span />
+        )}
         <button
           type="button"
           onClick={resetReveal}

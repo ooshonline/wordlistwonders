@@ -8,6 +8,7 @@ import { Library } from './views/Library';
 import { Editor } from './views/Editor';
 import { Display } from './views/Display';
 import { PrintModal } from './components/PrintModal';
+import { isTypingTarget } from './components/activityKeys';
 
 const MODE_LABELS: Record<DisplayMode, string> = {
   grid: 'Word Wall',
@@ -37,7 +38,7 @@ export function App() {
   const toast = useStore((s) => s.toast);
   const printOpen = useStore((s) => s.printOpen);
 
-  // Global keyboard: Escape closes overlays; carousel arrows/space.
+  // Global keyboard: Escape closes overlays; carousel arrows/clicker/space.
   const closePrint = useStore((s) => s.closePrint);
   const togglePresenter = useStore((s) => s.togglePresenter);
   const displayMode = useStore((s) => s.displayMode);
@@ -59,11 +60,15 @@ export function App() {
       }
       const s = useStore.getState();
       if (s.view !== 'display' || s.displayMode !== 'carousel') return;
-      const target = e.target as HTMLElement;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
-      if (e.key === 'ArrowRight') carouselNext();
-      else if (e.key === 'ArrowLeft') carouselPrev();
-      else if (e.key === ' ') {
+      if (isTypingTarget(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
+      // PageDown/PageUp = a presenter clicker's forward/back buttons.
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        e.preventDefault();
+        carouselNext();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        carouselPrev();
+      } else if (e.key === ' ') {
         e.preventDefault();
         togglePlay();
       }
