@@ -6,6 +6,7 @@ import { buildWordSearch } from '../generators/wordsearch';
 import { buildCrossword } from '../generators/crossword';
 import { buildSpellingTest, spellingPages, type SpellingPrompt } from '../generators/spellingTest';
 import { alphabetize, buildWordScramble, scramblePages, type ScrambleHint } from '../generators/wordScramble';
+import { alphaEligible, buildAlphaOrder } from '../generators/alphaOrder';
 import type { StoreState } from '../store';
 
 /** Free-distribution credit stamped on printed worksheets when opted in (M1). */
@@ -119,7 +120,24 @@ export interface ScramblePage {
   showNameLine: boolean;
   credit?: string;
 }
-export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage | ScramblePage;
+export interface AlphaGroupView {
+  num: number;
+  /** Words in the jumbled order printed for the student. */
+  jumbled: string[];
+  /** Words in ABC order — written on the lines only on the answer key. */
+  sorted: string[];
+  showAnswer: boolean;
+}
+export interface AlphaPage {
+  kind: 'alpha';
+  groups: AlphaGroupView[];
+  isKey: boolean;
+  title: string;
+  subtitle: string;
+  showNameLine: boolean;
+  credit?: string;
+}
+export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage | ScramblePage | AlphaPage;
 
 export interface SheetData {
   pages: SheetPage[];
@@ -352,6 +370,42 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
     if (puzzle.total === 0) warning = 'Add some words to this list to build a word scramble.';
     else if (skipped > 0)
       warning = `${skipped} word(s) are too short to scramble (one letter, or all the same letter), so they're left out.`;
+  } else if (kind === 'alpha') {
+    const al = state.alpha;
+    // Jumbles are random, so they only re-roll on Shuffle (salt); the student
+    // pages and the key share one build so the key always matches.
+    const data = memoPuzzle(`alpha|${sig}|${al.groupSize}|${al.shuffleGroups}|${state.salt.alpha}`, () =>
+      buildAlphaOrder(words, { groupSize: al.groupSize, shuffleGroups: al.shuffleGroups }),
+    );
+    // Sets sit two across: sets of up to 4 words fit three rows per page,
+    // longer sets two rows (measured to stay inside one US-Letter sheet).
+    const perPage = al.groupSize <= 4 ? 6 : 4;
+    const chunks: typeof data.groups[] = [];
+    for (let i = 0; i < data.groups.length; i += perPage) chunks.push(data.groups.slice(i, i + perPage));
+    const wordCount = `${data.total} word${data.total === 1 ? '' : 's'}`;
+    const setCount = `${data.groups.length} set${data.groups.length === 1 ? '' : 's'}`;
+    const mkPage = (chunk: typeof data.groups, idx: number, isKey: boolean): AlphaPage => ({
+      kind: 'alpha',
+      groups: chunk.map((g) => ({
+        num: g.num,
+        jumbled: g.jumbled.map((it) => it.text),
+        sorted: g.sorted.map((it) => it.text),
+        showAnswer: isKey,
+      })),
+      isKey,
+      title: listName + ' — ABC Order' + (isKey ? ' (Answer Key)' : ''),
+      subtitle: `${wordCount} · ${setCount}` + (chunks.length > 1 ? ` · Page ${idx + 1} of ${chunks.length}` : ''),
+      showNameLine: !isKey,
+    });
+    chunks.forEach((chunk, i) => pages.push(mkPage(chunk, i, false)));
+    if (al.answerKey) chunks.forEach((chunk, i) => pages.push(mkPage(chunk, i, true)));
+    kindLabel = 'ABC Order';
+    summary = `${wordCount} · ${pages.length} page(s)`;
+    const nonBlank = words.filter((w) => (w.text || '').trim()).length;
+    const dupes = nonBlank - alphaEligible(words).length;
+    if (data.total === 0) warning = 'Add some words to this list to build an ABC order sheet.';
+    else if (data.total < 2) warning = 'Add at least two words so there is something to put in ABC order.';
+    else if (dupes > 0) warning = `${dupes} repeated word(s) appear only once, so every set has one right order.`;
   }
 
   // Stamp the opt-in credit line onto every page (off by default).

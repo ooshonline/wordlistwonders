@@ -72,6 +72,7 @@ export function SheetPageView({ page }: { page: SheetPage }) {
       {page.kind === 'cross' && <CrossBody page={page} />}
       {page.kind === 'spelling' && <SpellingBody page={page} />}
       {page.kind === 'scramble' && <ScrambleBody page={page} />}
+      {page.kind === 'alpha' && <AlphaBody page={page} />}
 
       {page.credit && (
         <div
@@ -436,6 +437,51 @@ function CrossBody({ page }: { page: Extract<SheetPage, { kind: 'cross' }> }) {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function AlphaBody({ page }: { page: Extract<SheetPage, { kind: 'alpha' }> }) {
+  const instruction = page.isKey
+    ? 'Answer key — each set in ABC order.'
+    : 'Write each set of words in ABC order. Look at the first letter; if two match, look at the next one.';
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.placeholderInk }}>{instruction}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: '22px 28px', alignContent: 'start' }}>
+        {page.groups.map((g) => (
+          <div
+            key={g.num}
+            style={{
+              border: `2px solid ${C.borderLight}`,
+              borderRadius: 14,
+              padding: '12px 16px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              minWidth: 0,
+            }}
+          >
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '2px 14px', marginBottom: 2 }}>
+              <span style={scrambleLabel}>Set {g.num}</span>
+              {g.jumbled.map((word, i) => (
+                <span key={i} style={{ fontSize: 16, fontWeight: 800, overflowWrap: 'anywhere' }}>
+                  {word}
+                </span>
+              ))}
+            </div>
+            {g.sorted.map((word, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-end', gap: 10, minWidth: 0 }}>
+                <span style={{ ...spellNum, fontSize: 15, minWidth: 22 }}>{i + 1}.</span>
+                <div style={{ ...spellLine, minHeight: 28 }}>
+                  {g.showAnswer && <span style={{ ...spellAnswer, fontSize: 16 }}>{word}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );
