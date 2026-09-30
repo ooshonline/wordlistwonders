@@ -27,9 +27,10 @@ const MODE_LABELS: Record<DisplayMode, string> = {
   crossword: 'Crossword',
   spelling: 'Spelling Test',
   scramble: 'Word Scramble',
+  alpha: 'ABC Order',
 };
 
-const PRINT_MODES: DisplayMode[] = ['flashcards', 'bingo', 'wordsearch', 'crossword', 'spelling', 'scramble'];
+const PRINT_MODES: DisplayMode[] = ['flashcards', 'bingo', 'wordsearch', 'crossword', 'spelling', 'scramble', 'alpha'];
 const PROJECT_MODES: DisplayMode[] = ['grid', 'carousel', 'reveal', 'quiz', 'missing', 'flyswatter', 'matching', 'sentence', 'wordday', 'category'];
 
 export function App() {

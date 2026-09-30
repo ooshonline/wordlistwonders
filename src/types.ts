@@ -64,10 +64,11 @@ export type DisplayMode =
   | 'wordsearch'
   | 'crossword'
   | 'spelling'
-  | 'scramble';
+  | 'scramble'
+  | 'alpha';
 
 export type StylePreset = 'card' | 'stylized';
 export type ContentMode = 'both' | 'wordOnly' | 'imageOnly';
 
 /** The PRINT worksheet kinds. */
-export const SHEET_KINDS: DisplayMode[] = ['bingo', 'flashcards', 'wordsearch', 'crossword', 'spelling', 'scramble'];
+export const SHEET_KINDS: DisplayMode[] = ['bingo', 'flashcards', 'wordsearch', 'crossword', 'spelling', 'scramble', 'alpha'];

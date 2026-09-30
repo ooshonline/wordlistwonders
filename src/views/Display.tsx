@@ -40,6 +40,7 @@ export function Display() {
     case 'crossword':
     case 'spelling':
     case 'scramble':
+    case 'alpha':
       return <SheetWorkspace />;
     default:
       return null;

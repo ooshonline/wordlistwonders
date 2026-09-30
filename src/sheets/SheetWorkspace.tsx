@@ -43,7 +43,7 @@ export function SheetWorkspace() {
     () => buildSheet(kind, set, state),
     // Rebuild when inputs that affect the sheet change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.scramble, state.salt, state.printCredit],
+    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.scramble, state.alpha, state.salt, state.printCredit],
   );
 
   // Live preview zoom from the measured column width.
@@ -103,7 +103,7 @@ export function SheetWorkspace() {
           {data.showShuffle && (
             <button
               type="button"
-              onClick={() => reshuffle(kind as 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble')}
+              onClick={() => reshuffle(kind as 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble' | 'alpha')}
               style={outlineBtn}
             >
               Shuffle
@@ -408,6 +408,10 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
   const setSpellingShuffle = useStore((s) => s.setSpellingShuffle);
   const setSpellingAnswerKey = useStore((s) => s.setSpellingAnswerKey);
   const scramble = useStore((s) => s.scramble);
+  const alpha = useStore((s) => s.alpha);
+  const setAlphaGroupSize = useStore((s) => s.setAlphaGroupSize);
+  const setAlphaShuffle = useStore((s) => s.setAlphaShuffle);
+  const setAlphaAnswerKey = useStore((s) => s.setAlphaAnswerKey);
   const setScrambleHint = useStore((s) => s.setScrambleHint);
   const setScrambleWordBank = useStore((s) => s.setScrambleWordBank);
   const setScramblePerPage = useStore((s) => s.setScramblePerPage);
@@ -583,6 +587,39 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
           name="vw-spellkey"
           value={spelling.answerKey}
           onChange={setSpellingAnswerKey}
+          options={[
+            { value: true, label: 'Include' },
+            { value: false, label: 'Skip' },
+          ]}
+        />
+      </>
+    );
+  }
+  if (kind === 'alpha') {
+    return (
+      <>
+        <LabeledSeg
+          label="Words per set"
+          name="vw-alphasize"
+          value={alpha.groupSize}
+          onChange={setAlphaGroupSize}
+          options={[4, 5, 6, 8].map((n) => ({ value: n, label: String(n) }))}
+        />
+        <LabeledSeg
+          label="Sets"
+          name="vw-alphamix"
+          value={alpha.shuffleGroups}
+          onChange={setAlphaShuffle}
+          options={[
+            { value: false, label: 'List order' },
+            { value: true, label: 'Mix words' },
+          ]}
+        />
+        <LabeledSeg
+          label="Answer key"
+          name="vw-alphakey"
+          value={alpha.answerKey}
+          onChange={setAlphaAnswerKey}
           options={[
             { value: true, label: 'Include' },
             { value: false, label: 'Skip' },
