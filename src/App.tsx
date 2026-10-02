@@ -8,6 +8,7 @@ import { Library } from './views/Library';
 import { Editor } from './views/Editor';
 import { Display } from './views/Display';
 import { PrintModal } from './components/PrintModal';
+import { ActivityTips } from './components/ActivityTips';
 import { isTypingTarget } from './components/activityKeys';
 
 const MODE_LABELS: Record<DisplayMode, string> = {
@@ -318,6 +319,7 @@ function Toolbar() {
 
       {isDisplay && (
         <>
+          <ActivityTips mode={displayMode} label={MODE_LABELS[displayMode]} />
           <button
             type="button"
             onClick={openPrint}
