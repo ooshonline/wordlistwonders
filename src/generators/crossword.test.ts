@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { buildCrossword } from './crossword';
 import type { Word } from '../types';
 
@@ -58,5 +58,40 @@ describe('buildCrossword', () => {
     const cw = buildCrossword(mk([['abc'], ['xyz']]));
     expect(cw.unplaced).toHaveLength(1);
     expect(['ABC', 'XYZ']).toContain(cw.unplaced[0]);
+  });
+
+  it('never lays a word on top of another word running the same way', () => {
+    // The retry pass once let "pencil" swallow an already-placed "pen" running
+    // the same way — two clues shared one number and "pen" was unfindable.
+    // Seeds 280/308/919 reproduced it on the Classroom Objects list.
+    const list = mk(
+      ['pen', 'book', 'desk', 'chair', 'pencil', 'eraser', 'ruler', 'backpack', 'scissors', 'board', 'glue', 'crayon', 'notebook', 'marker'].map(
+        (w): [string] => [w],
+      ),
+    );
+    const seeded = (a: number) => () => {
+      a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    for (const seed of [280, 308, 919]) {
+      vi.spyOn(Math, 'random').mockImplementation(seeded(seed));
+      const cw = buildCrossword(list);
+      vi.restoreAllMocks();
+      const at = (num: number) => cw.cells.findIndex((c) => c.num === num);
+      for (const [entries, step] of [[cw.across, 1], [cw.down, cw.cols]] as const) {
+        const nums = entries.map((e) => e.num);
+        expect(new Set(nums).size).toBe(nums.length);
+        const used = new Set<number>();
+        for (const e of entries) {
+          for (let i = 0; i < e.word.length; i++) {
+            const idx = at(e.num) + i * step;
+            expect(used.has(idx)).toBe(false);
+            used.add(idx);
+          }
+        }
+      }
+    }
   });
 });

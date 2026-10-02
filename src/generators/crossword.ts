@@ -57,6 +57,8 @@ function attemptLayout(source: Entry[]): Layout {
     .sort((a, b) => b.word.length - a.word.length || Math.random() - 0.5);
 
   const map: Record<string, string> = {};
+  // Which way(s) each letter cell is already used: 1 = across, 2 = down.
+  const dirs: Record<string, number> = {};
   const placed: Placed[] = [];
 
   const canPlace = (word: string, r: number, c: number, horiz: boolean): number => {
@@ -70,6 +72,10 @@ function attemptLayout(source: Entry[]): Layout {
       const cur = map[key(rr, cc)];
       if (cur) {
         if (cur !== word[i]) return -1;
+        // Only a perpendicular crossing may share a cell. Otherwise a longer
+        // word can swallow a shorter one running the same way ("pencil" over
+        // "pen"), giving two clues one number and a word nobody can find.
+        if (dirs[key(rr, cc)] & (horiz ? 1 : 2)) return -1;
         touches++;
       } else if (
         horiz
@@ -85,7 +91,9 @@ function attemptLayout(source: Entry[]): Layout {
 
   const put = (e: Entry, r: number, c: number, horiz: boolean) => {
     for (let i = 0; i < e.word.length; i++) {
-      map[key(horiz ? r : r + i, horiz ? c + i : c)] = e.word[i];
+      const k = key(horiz ? r : r + i, horiz ? c + i : c);
+      map[k] = e.word[i];
+      dirs[k] = (dirs[k] || 0) | (horiz ? 1 : 2);
     }
     placed.push({ word: e.word, clue: e.clue, r, c, horiz });
   };
