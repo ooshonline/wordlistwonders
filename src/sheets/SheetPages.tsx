@@ -387,9 +387,20 @@ const scrambleFirst: CSSProperties = {
 
 function CrossBody({ page }: { page: Extract<SheetPage, { kind: 'cross' }> }) {
   const px = page.cellPx;
+  // Tall, narrow grids put the clues beside the grid (one column) so the page
+  // still fits; otherwise clues sit below in Across | Down columns.
+  const side = page.cluesBeside;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${page.cols}, ${px}px)`, justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: side ? 'row' : 'column', gap: 28, alignItems: 'flex-start' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${page.cols}, ${px}px)`,
+          justifyContent: 'center',
+          flex: 'none',
+          alignSelf: side ? 'flex-start' : 'center',
+        }}
+      >
         {page.cells.map((c, i) =>
           c.letter ? (
             <div
@@ -420,7 +431,17 @@ function CrossBody({ page }: { page: Extract<SheetPage, { kind: 'cross' }> }) {
           ),
         )}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 28 }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: side ? 'minmax(0,1fr)' : '1fr 1fr',
+          gap: side ? 16 : 28,
+          flex: 1,
+          minWidth: 0,
+          alignSelf: 'stretch',
+          alignContent: 'start',
+        }}
+      >
         <div>
           <div style={{ ...findWordsLabel, color: C.teal }}>Across</div>
           {page.across.map((cl) => (

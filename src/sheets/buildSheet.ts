@@ -4,6 +4,7 @@ import { wordSig, cleanWord } from '../generators/random';
 import { buildBingoCards } from '../generators/bingo';
 import { buildWordSearch } from '../generators/wordsearch';
 import { buildCrossword } from '../generators/crossword';
+import { crossLayout } from '../generators/crossLayout';
 import { buildSpellingTest, spellingPages, type SpellingPrompt } from '../generators/spellingTest';
 import { alphabetize, buildWordScramble, scramblePages, type ScrambleHint } from '../generators/wordScramble';
 import { alphaEligible, buildAlphaOrder } from '../generators/alphaOrder';
@@ -69,6 +70,7 @@ export interface CrossPage {
   kind: 'cross';
   cols: number;
   cellPx: number;
+  cluesBeside: boolean;
   across: { num: number; clue: string }[];
   down: { num: number; clue: string }[];
   cells: { letter: string | null; num: number | null; showLetter: boolean }[];
@@ -159,6 +161,7 @@ const flashGeometry = (perPage: number): { cols: number; rows: number } =>
   })[perPage] || { cols: 2, rows: 2 };
 
 const bingoColumns = (n: number): number => ({ 1: 1, 2: 2, 4: 2, 6: 3 })[n] || 2;
+
 
 export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): SheetData {
   const words = set.words;
@@ -270,7 +273,6 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
     const raw = memoPuzzle(`cw|${sig}|${state.salt.crossword}`, () => buildCrossword(words));
     raw.across.forEach((e) => (editLabels[e.word] = 'A' + e.num));
     raw.down.forEach((e) => (editLabels[e.word] = 'D' + e.num));
-    const px = raw.cols > 18 ? 26 : raw.cols > 14 ? 30 : 34;
     // Clues are read live from the word list so edits show immediately
     // without re-laying out the grid.
     const liveClues = (list: { num: number; word: string }[]): { num: number; clue: string }[] =>
@@ -281,10 +283,15 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
       });
     const across = liveClues(raw.across);
     const down = liveClues(raw.down);
+    // Size cells (and place clues under or beside the grid) to fit one page.
+    // Measured on the longer answer-key title so both pages share one layout.
+    const keyTitle = listName + ' — Crossword (Answer Key)';
+    const layout = crossLayout(raw.rows, raw.cols, across, down, keyTitle.length);
     const mkPage = (isKey: boolean): CrossPage => ({
       kind: 'cross',
       cols: raw.cols,
-      cellPx: px,
+      cellPx: layout.cellPx,
+      cluesBeside: layout.side,
       across,
       down,
       cells: raw.cells.map((c) => ({ letter: c.letter, num: c.num, showLetter: !!(isKey && c.letter) })),
