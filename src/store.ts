@@ -19,6 +19,7 @@ import type { SpellingPrompt } from './generators/spellingTest';
 import type { ScrambleHint } from './generators/wordScramble';
 import { buildSentenceSet, type SentenceCard, type SentenceMode } from './generators/sentenceBuilder';
 import { buildWordOfDay, type WordOfDayCard } from './generators/wordOfDay';
+import { buildGuessCards, clampMisses, guessProgress, GUESS_DEFAULT_MISSES, type GuessCard } from './generators/guessWord';
 import {
   buildCategorySort,
   buildBuckets,
@@ -96,6 +97,21 @@ export interface SentenceState {
 // A calm, single-word focus session: one word at a time, big, with its picture.
 // The class sees the word + image first; the teacher reveals its meaning (clue)
 // and translation (gloss) when ready. next/prev step through the set, wrapping.
+// Guess the Word (CX8): a friendly, no-gallows hangman. One hidden word at a
+// time; the class calls letters, the teacher taps them on an A–Z keyboard.
+// `guessed` is the raw letter history — guessProgress() derives hits/misses.
+export interface GuessState {
+  cards: GuessCard[];
+  index: number;
+  /** Letters tried on the current word, in order. */
+  guessed: string[];
+  /** Teacher pressed "Show the word" (gives up the round without a win). */
+  revealed: boolean;
+  maxMisses: number;
+  shuffleOrder: boolean;
+  total: number;
+}
+
 export interface WordOfDayState {
   /** The built cards for the current session (in presentation order). */
   cards: WordOfDayCard[];
@@ -172,6 +188,7 @@ export interface StoreState {
   match: MatchState;
   sentence: SentenceState;
   wordOfDay: WordOfDayState;
+  guess: GuessState;
   category: CategoryState;
   printOpen: boolean;
   sheetEditorOpen: boolean;
@@ -283,6 +300,16 @@ export interface StoreActions {
   toggleWordOfDayReveal: () => void;
   setWordOfDayShuffle: (v: boolean) => void;
   reshuffleWordOfDay: () => void;
+  // guess the word (CX8)
+  initGuess: () => void;
+  /** Try a letter on the current word (ignored once the round is over). */
+  guessLetter: (letter: string) => void;
+  guessNext: () => void;
+  guessPrev: () => void;
+  revealGuess: () => void;
+  setGuessMisses: (n: number) => void;
+  setGuessShuffle: (v: boolean) => void;
+  reshuffleGuess: () => void;
   // category sort (CX5)
   /** Build the board for the current set, reading its persisted buckets/labels. */
   initCategory: () => void;
@@ -528,6 +555,7 @@ export const useStore = create<Store>((set, get) => {
     },
     sentence: { mode: 'mixed', cards: [], index: 0, revealed: false, shuffleOrder: false, total: 0 },
     wordOfDay: { cards: [], index: 0, revealed: false, shuffleOrder: false, total: 0 },
+    guess: { cards: [], index: 0, guessed: [], revealed: false, maxMisses: GUESS_DEFAULT_MISSES, shuffleOrder: false, total: 0 },
     category: { chips: [], buckets: [], assignments: {}, shuffleOrder: false, bucketCount: 2, total: 0 },
     printOpen: false,
     sheetEditorOpen: false,
@@ -1083,6 +1111,41 @@ export const useStore = create<Store>((set, get) => {
       get().initSentence();
     },
     reshuffleSentence: () => get().initSentence(),
+
+    // ── guess the word (CX8) ──
+    initGuess: () => {
+      const st = get().guess;
+      const cards = buildGuessCards(getCurrentSet().words, { shuffleOrder: st.shuffleOrder });
+      set({ guess: { ...st, cards, total: cards.length, index: 0, guessed: [], revealed: false } });
+    },
+    guessLetter: (letter) =>
+      set((s) => {
+        const g = s.guess;
+        const card = g.cards[g.index];
+        const l = letter.toUpperCase();
+        if (!card || g.revealed || !/^[A-Z]$/.test(l) || g.guessed.includes(l)) return {};
+        if (guessProgress(card, g.guessed, g.maxMisses).over) return {};
+        return { guess: { ...g, guessed: [...g.guessed, l] } };
+      }),
+    guessNext: () =>
+      set((s) => {
+        const t = s.guess.total;
+        if (!t) return {};
+        return { guess: { ...s.guess, index: (s.guess.index + 1) % t, guessed: [], revealed: false } };
+      }),
+    guessPrev: () =>
+      set((s) => {
+        const t = s.guess.total;
+        if (!t) return {};
+        return { guess: { ...s.guess, index: (s.guess.index - 1 + t) % t, guessed: [], revealed: false } };
+      }),
+    revealGuess: () => set((s) => ({ guess: { ...s.guess, revealed: true } })),
+    setGuessMisses: (n) => set((s) => ({ guess: { ...s.guess, maxMisses: clampMisses(n), guessed: [], revealed: false } })),
+    setGuessShuffle: (v) => {
+      set((s) => ({ guess: { ...s.guess, shuffleOrder: v } }));
+      get().initGuess();
+    },
+    reshuffleGuess: () => get().initGuess(),
 
     // ── word of the day (CX4) ──
     initWordOfDay: () => {
