@@ -578,6 +578,7 @@ export const useStore = create<Store>((set, get) => {
       if (mode === 'sentence') get().initSentence();
       if (mode === 'wordday') get().initWordOfDay();
       if (mode === 'category') get().initCategory();
+      if (mode === 'guess') get().initGuess();
       if (mode !== 'carousel') {
         set({ carouselPlaying: false });
         get().restartCarouselTimer();

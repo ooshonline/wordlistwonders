@@ -45,6 +45,10 @@ export const ACTIVITY_TIPS: Record<DisplayMode, string[]> = {
     'Name the groups (like “Food” and “Drink”), then invite students up to sort a word.',
     'Ask “Why does it go there?” — talking about the choice is the real learning.',
   ],
+  guess: [
+    'Students call out letters while you tap them. Wrong letters fill a dot — no scary drawings.',
+    'Stuck? Show the clue. Then ask a student to use the word in a sentence.',
+  ],
   flashcards: [
     'Print, cut, and use for quick drills, memory games, or a “hold up the card” check.',
     'Print two sets on card stock for a matching game in pairs.',

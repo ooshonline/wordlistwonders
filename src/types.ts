@@ -59,6 +59,7 @@ export type DisplayMode =
   | 'sentence'
   | 'wordday'
   | 'category'
+  | 'guess'
   | 'flashcards'
   | 'bingo'
   | 'wordsearch'

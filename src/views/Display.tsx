@@ -8,6 +8,7 @@ import { Flyswatter } from '../activities/Flyswatter';
 import { Matching } from '../activities/Matching';
 import { SentenceBuilder } from '../activities/SentenceBuilder';
 import { WordOfDay } from '../activities/WordOfDay';
+import { GuessWord } from '../activities/GuessWord';
 import { CategorySort } from '../activities/CategorySort';
 import { SheetWorkspace } from '../sheets/SheetWorkspace';
 
@@ -34,6 +35,8 @@ export function Display() {
       return <WordOfDay />;
     case 'category':
       return <CategorySort />;
+    case 'guess':
+      return <GuessWord />;
     case 'bingo':
     case 'flashcards':
     case 'wordsearch':
