@@ -72,8 +72,8 @@ export function GuessWord() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22, padding: '28px 20px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, maxWidth: '100%' }}>
-        <button type="button" aria-label="Previous word" onClick={prev} style={navBtn}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, maxWidth: '100%', minWidth: 0 }}>
+        <button type="button" aria-label="Previous word" onClick={prev} style={navBtn} className="vw-guess-sidenav">
           <Icon path={icons.chevronLeft} size={26} />
         </button>
 
@@ -81,7 +81,7 @@ export function GuessWord() {
           key={index}
           style={{
             width: 760,
-            maxWidth: '78vw',
+            maxWidth: '100%',
             minWidth: 0,
             background: C.surface,
             border: `2px solid ${C.tealTint}`,
@@ -104,21 +104,22 @@ export function GuessWord() {
           {/* The word: one tile per character; spaces/hyphens show from the start. */}
           <div
             aria-label={over ? card.text : `${p.tiles.filter((t) => t.isLetter).length} letter word`}
-            style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 10, maxWidth: '100%' }}
+            style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(6px, 2vw, 10px)', maxWidth: '100%' }}
           >
             {tiles.map((t, i) =>
               t.isLetter ? (
                 <div
                   key={i}
                   style={{
-                    width: 54,
+                    // Shrink on narrow screens so short words stay on one line.
+                    width: 'clamp(30px, 9vw, 54px)',
                     height: 66,
                     borderBottom: `5px solid ${t.shown ? C.teal : C.ink}`,
                     display: 'flex',
                     alignItems: 'flex-end',
                     justifyContent: 'center',
                     fontFamily: DISPLAY,
-                    fontSize: 48,
+                    fontSize: 'clamp(30px, 8vw, 48px)',
                     fontWeight: 800,
                     lineHeight: 1.2,
                     color: p.lost && !p.hits.includes(t.ch.toUpperCase()) ? C.orange : C.tealDeep,
@@ -213,7 +214,7 @@ export function GuessWord() {
           </div>
         </div>
 
-        <button type="button" aria-label="Next word" onClick={next} style={navBtn}>
+        <button type="button" aria-label="Next word" onClick={next} style={navBtn} className="vw-guess-sidenav">
           <Icon path={icons.chevronRight} size={26} />
         </button>
       </div>
@@ -241,8 +242,17 @@ export function GuessWord() {
             Shuffle again
           </button>
         )}
-        <div style={{ fontSize: 14, fontWeight: 700, opacity: 0.7 }}>
-          {index + 1} / {total}
+        {/* On phones the arrows move down here so the card can use the full width. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button type="button" aria-label="Previous word" onClick={prev} style={navBtn} className="vw-guess-bottomnav">
+            <Icon path={icons.chevronLeft} size={22} />
+          </button>
+          <div style={{ fontSize: 14, fontWeight: 700, opacity: 0.7 }}>
+            {index + 1} / {total}
+          </div>
+          <button type="button" aria-label="Next word" onClick={next} style={navBtn} className="vw-guess-bottomnav">
+            <Icon path={icons.chevronRight} size={22} />
+          </button>
         </div>
       </div>
 

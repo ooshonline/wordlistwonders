@@ -221,3 +221,16 @@ input[type='range'] {
 @page {
   margin: 12mm;
 }
+
+/* Guess the Word (CX8): side arrows on wide screens, bottom arrows on phones. */
+.vw-guess-bottomnav {
+  display: none !important;
+}
+@media (max-width: 640px) {
+  .vw-guess-sidenav {
+    display: none !important;
+  }
+  .vw-guess-bottomnav {
+    display: flex !important;
+  }
+}
