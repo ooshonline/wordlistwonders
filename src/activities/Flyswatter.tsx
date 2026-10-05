@@ -1,12 +1,20 @@
+import { useState } from 'react';
 import { useStore, currentSet } from '../store';
 import { C, DISPLAY } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
+import { Confetti } from '../components/Confetti';
 
 export function Flyswatter() {
   const set = useStore(currentSet);
   const fly = useStore((s) => s.flyswatter);
   const mark = useStore((s) => s.markFlyswatterWord);
   const addScore = useStore((s) => s.addFlyswatterScore);
+  // Bumped on every award so the confetti burst replays (G2).
+  const [burst, setBurst] = useState(0);
+  const award = (team: 'scoreA' | 'scoreB') => {
+    addScore(team);
+    setBurst((n) => n + 1);
+  };
 
   return (
     <div
@@ -20,6 +28,7 @@ export function Flyswatter() {
         alignItems: 'center',
       }}
     >
+      {burst > 0 && <Confetti burstKey={burst} pieces={50} />}
       <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
         <Score label="Team A" score={fly.scoreA} />
         <div
@@ -91,10 +100,10 @@ export function Flyswatter() {
         Tap the word that was swatted, then award the point.
       </div>
       <div style={{ display: 'flex', gap: 10 }}>
-        <button type="button" disabled={!fly.lastWordId} onClick={() => addScore('scoreA')} style={awardBtn(!fly.lastWordId)}>
+        <button type="button" disabled={!fly.lastWordId} onClick={() => award('scoreA')} style={awardBtn(!fly.lastWordId)}>
           Award Team A
         </button>
-        <button type="button" disabled={!fly.lastWordId} onClick={() => addScore('scoreB')} style={awardBtn(!fly.lastWordId)}>
+        <button type="button" disabled={!fly.lastWordId} onClick={() => award('scoreB')} style={awardBtn(!fly.lastWordId)}>
           Award Team B
         </button>
       </div>

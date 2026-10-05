@@ -4,6 +4,7 @@ import type { QuizState } from '../store';
 import { C, DISPLAY } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
 import { SegControl, Kbd, KeyTip } from '../components/ui';
+import { Confetti } from '../components/Confetti';
 
 const TEAM_NAMES = ['Team A', 'Team B', 'Team C', 'Team D'];
 
@@ -63,6 +64,7 @@ export function Quiz() {
     >
       {quiz.done ? (
         <>
+          <Confetti />
           <div style={{ fontFamily: DISPLAY, fontSize: 34, fontWeight: 700 }}>Round Complete!</div>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
             {scoreboards.map((sb) => (

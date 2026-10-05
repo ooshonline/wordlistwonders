@@ -84,6 +84,44 @@ input[type='range'] {
   }
 }
 
+/* Confetti burst (G2) — Quiz "Round Complete" + Flyswatter awards. A fixed,
+   click-through layer; each piece falls, drifts sideways and spins. The
+   component itself skips rendering under prefers-reduced-motion; the rule
+   below is a belt-and-braces fallback. */
+.vw-confetti {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 2000;
+}
+.vw-confetti span {
+  position: absolute;
+  top: -20px;
+  opacity: 0;
+  animation-name: vw-confetti-fall;
+  animation-timing-function: cubic-bezier(0.25, 0.6, 0.5, 1);
+  animation-fill-mode: forwards;
+}
+@keyframes vw-confetti-fall {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--vw-drift, 0px), 105vh, 0) rotate(var(--vw-spin, 360deg));
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vw-confetti {
+    display: none;
+  }
+}
+
 /* ── Hover affordances (U7) ──────────────────────────────────────────────────
    Clickable surfaces lift/respond on hover so they read as interactive on a
    projector. Kept in CSS (not inline) so :hover works; the base card shadow
