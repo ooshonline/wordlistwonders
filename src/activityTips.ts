@@ -49,6 +49,10 @@ export const ACTIVITY_TIPS: Record<DisplayMode, string[]> = {
     'Students call out letters while you tap them. Wrong letters fill a dot — no scary drawings.',
     'Stuck? Show the clue. Then ask a student to use the word in a sentence.',
   ],
+  secret: [
+    'One student peeks at the word while the class closes their eyes, then acts, draws, or describes it.',
+    'Play in teams: the team that guesses first gets the next turn.',
+  ],
   flashcards: [
     'Print, cut, and use for quick drills, memory games, or a “hold up the card” check.',
     'Print two sets on card stock for a matching game in pairs.',
