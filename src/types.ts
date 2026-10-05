@@ -60,6 +60,7 @@ export type DisplayMode =
   | 'wordday'
   | 'category'
   | 'guess'
+  | 'secret'
   | 'flashcards'
   | 'bingo'
   | 'wordsearch'

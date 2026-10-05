@@ -19,6 +19,7 @@ import type { SpellingPrompt } from './generators/spellingTest';
 import type { ScrambleHint } from './generators/wordScramble';
 import { buildSentenceSet, type SentenceCard, type SentenceMode } from './generators/sentenceBuilder';
 import { buildWordOfDay, type WordOfDayCard } from './generators/wordOfDay';
+import { buildSecretCards, clampSecretSeconds, SECRET_DEFAULT_SECONDS, type SecretCard, type SecretMode } from './generators/secretWord';
 import { buildGuessCards, clampMisses, guessProgress, GUESS_DEFAULT_MISSES, type GuessCard } from './generators/guessWord';
 import {
   buildCategorySort,
@@ -112,6 +113,20 @@ export interface GuessState {
   total: number;
 }
 
+// Secret Word (CX10): charades / Pictionary / describe-it. One student secretly
+// peeks at the word, then performs it while the class guesses. `revealed` shows
+// the word on the projector; the round timer itself lives in the component.
+export interface SecretState {
+  cards: SecretCard[];
+  index: number;
+  revealed: boolean;
+  mode: SecretMode;
+  /** Round length in seconds; 0 = no timer. */
+  seconds: number;
+  shuffleOrder: boolean;
+  total: number;
+}
+
 export interface WordOfDayState {
   /** The built cards for the current session (in presentation order). */
   cards: WordOfDayCard[];
@@ -189,6 +204,7 @@ export interface StoreState {
   sentence: SentenceState;
   wordOfDay: WordOfDayState;
   guess: GuessState;
+  secret: SecretState;
   category: CategoryState;
   printOpen: boolean;
   sheetEditorOpen: boolean;
@@ -310,6 +326,15 @@ export interface StoreActions {
   setGuessMisses: (n: number) => void;
   setGuessShuffle: (v: boolean) => void;
   reshuffleGuess: () => void;
+  // secret word (CX10)
+  initSecret: () => void;
+  secretNext: () => void;
+  secretPrev: () => void;
+  setSecretRevealed: (v: boolean) => void;
+  setSecretMode: (m: SecretMode) => void;
+  setSecretSeconds: (n: number) => void;
+  setSecretShuffle: (v: boolean) => void;
+  reshuffleSecret: () => void;
   // category sort (CX5)
   /** Build the board for the current set, reading its persisted buckets/labels. */
   initCategory: () => void;
@@ -556,6 +581,7 @@ export const useStore = create<Store>((set, get) => {
     sentence: { mode: 'mixed', cards: [], index: 0, revealed: false, shuffleOrder: false, total: 0 },
     wordOfDay: { cards: [], index: 0, revealed: false, shuffleOrder: false, total: 0 },
     guess: { cards: [], index: 0, guessed: [], revealed: false, maxMisses: GUESS_DEFAULT_MISSES, shuffleOrder: false, total: 0 },
+    secret: { cards: [], index: 0, revealed: false, mode: 'act', seconds: SECRET_DEFAULT_SECONDS, shuffleOrder: false, total: 0 },
     category: { chips: [], buckets: [], assignments: {}, shuffleOrder: false, bucketCount: 2, total: 0 },
     printOpen: false,
     sheetEditorOpen: false,
@@ -579,6 +605,7 @@ export const useStore = create<Store>((set, get) => {
       if (mode === 'wordday') get().initWordOfDay();
       if (mode === 'category') get().initCategory();
       if (mode === 'guess') get().initGuess();
+      if (mode === 'secret') get().initSecret();
       if (mode !== 'carousel') {
         set({ carouselPlaying: false });
         get().restartCarouselTimer();
@@ -605,6 +632,7 @@ export const useStore = create<Store>((set, get) => {
         if (mode === 'quiz') get().initQuiz();
         if (mode === 'matching') get().initMatch();
         if (mode === 'category') get().initCategory();
+        if (mode === 'secret') get().initSecret();
         set({
           missingWord: { removedId: null, revealed: false, history: [] },
           flyswatter: { scoreA: 0, scoreB: 0, lastWordId: null },
@@ -1147,6 +1175,33 @@ export const useStore = create<Store>((set, get) => {
       get().initGuess();
     },
     reshuffleGuess: () => get().initGuess(),
+
+    // ── secret word (CX10) ──
+    initSecret: () => {
+      const st = get().secret;
+      const cards = buildSecretCards(getCurrentSet().words, { shuffleOrder: st.shuffleOrder });
+      set({ secret: { ...st, cards, total: cards.length, index: 0, revealed: false } });
+    },
+    secretNext: () =>
+      set((s) => {
+        const t = s.secret.total;
+        if (!t) return {};
+        return { secret: { ...s.secret, index: (s.secret.index + 1) % t, revealed: false } };
+      }),
+    secretPrev: () =>
+      set((s) => {
+        const t = s.secret.total;
+        if (!t) return {};
+        return { secret: { ...s.secret, index: (s.secret.index - 1 + t) % t, revealed: false } };
+      }),
+    setSecretRevealed: (v) => set((s) => ({ secret: { ...s.secret, revealed: v } })),
+    setSecretMode: (m) => set((s) => ({ secret: { ...s.secret, mode: m } })),
+    setSecretSeconds: (n) => set((s) => ({ secret: { ...s.secret, seconds: clampSecretSeconds(n) } })),
+    setSecretShuffle: (v) => {
+      set((s) => ({ secret: { ...s.secret, shuffleOrder: v } }));
+      get().initSecret();
+    },
+    reshuffleSecret: () => get().initSecret(),
 
     // ── word of the day (CX4) ──
     initWordOfDay: () => {

@@ -9,6 +9,7 @@ import { Matching } from '../activities/Matching';
 import { SentenceBuilder } from '../activities/SentenceBuilder';
 import { WordOfDay } from '../activities/WordOfDay';
 import { GuessWord } from '../activities/GuessWord';
+import { SecretWord } from '../activities/SecretWord';
 import { CategorySort } from '../activities/CategorySort';
 import { SheetWorkspace } from '../sheets/SheetWorkspace';
 
@@ -37,6 +38,8 @@ export function Display() {
       return <CategorySort />;
     case 'guess':
       return <GuessWord />;
+    case 'secret':
+      return <SecretWord />;
     case 'bingo':
     case 'flashcards':
     case 'wordsearch':
