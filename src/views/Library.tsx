@@ -1,6 +1,7 @@
 import { useStore } from '../store';
 import { C, DISPLAY } from '../tokens';
 import { GreenButton, Icon, icons } from '../components/ui';
+import { AdSlot } from '../components/AdSlot';
 
 export function Library() {
   const sets = useStore((s) => s.sets);
@@ -127,6 +128,8 @@ export function Library() {
           );
         })}
       </div>
+
+      <AdSlot />
     </div>
   );
 }
