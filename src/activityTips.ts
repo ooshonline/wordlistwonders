@@ -81,4 +81,8 @@ export const ACTIVITY_TIPS: Record<DisplayMode, string[]> = {
     'Students write each set of words in ABC order.',
     'Remind them: if the first letters match, look at the second letter.',
   ],
+  roll: [
+    'Pairs take turns rolling a die and reading the next word in that column.',
+    'Color the circle after each word. Which column fills up first?',
+  ],
 };

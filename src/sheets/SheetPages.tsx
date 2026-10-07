@@ -73,6 +73,7 @@ export function SheetPageView({ page }: { page: SheetPage }) {
       {page.kind === 'spelling' && <SpellingBody page={page} />}
       {page.kind === 'scramble' && <ScrambleBody page={page} />}
       {page.kind === 'alpha' && <AlphaBody page={page} />}
+      {page.kind === 'roll' && <RollBody page={page} />}
 
       {page.credit && (
         <div
@@ -501,6 +502,111 @@ function AlphaBody({ page }: { page: Extract<SheetPage, { kind: 'alpha' }> }) {
                 </div>
               </div>
             ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Roll & Read ─────────────────────────────────────────────────────────────
+// Pip positions (0–8, a 3×3 grid read left-to-right, top-to-bottom) per die face.
+const DIE_PIPS: number[][] = [[4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
+// Fixed row heights (measured) keep every grid inside one US-Letter page.
+const ROLL_ROW_H: Record<number, number> = { 4: 150, 6: 100, 8: 76 };
+
+function DieFace({ face }: { face: number }) {
+  const pips = DIE_PIPS[face - 1];
+  return (
+    <div
+      aria-label={`Die face ${face}`}
+      style={{
+        width: 40,
+        height: 40,
+        border: `2.5px solid ${C.ink}`,
+        borderRadius: 9,
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateRows: 'repeat(3, 1fr)',
+        padding: 4,
+        boxSizing: 'border-box',
+        background: '#ffffff',
+      }}
+    >
+      {Array.from({ length: 9 }, (_, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {pips.includes(i) && <div style={{ width: 7, height: 7, borderRadius: '50%', background: C.ink }} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RollBody({ page }: { page: Extract<SheetPage, { kind: 'roll' }> }) {
+  const rowH = ROLL_ROW_H[page.rows.length] ?? 100;
+  // Longer words/phrases step down so they stay inside the cell.
+  const wordSize = (text: string) => {
+    const base = page.pictures ? (rowH < 90 ? 13 : 16) : rowH < 90 ? 18 : 22;
+    return text.length > 14 ? base - 5 : text.length > 9 ? base - 3 : base;
+  };
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.placeholderInk }}>
+        Roll the die. Read the next word in that column, then color its circle. Which column fills up first?
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0,1fr))', gap: 6 }}>
+        {[1, 2, 3, 4, 5, 6].map((face) => (
+          <div key={face} style={{ display: 'flex', justifyContent: 'center', paddingBottom: 4 }}>
+            <DieFace face={face} />
+          </div>
+        ))}
+        {page.rows.flat().map((cell, i) => (
+          <div
+            key={i}
+            style={{
+              height: rowH,
+              border: `2px solid ${C.borderLight}`,
+              borderRadius: 10,
+              padding: '6px 6px 18px',
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4,
+              position: 'relative',
+              minWidth: 0,
+            }}
+          >
+            {page.pictures && (
+              <div style={{ width: '100%', flex: 1, minHeight: 0 }}>
+                <ImageSlot id={cell.slotId} fit="contain" shape="rounded" radius={6} placeholder="" />
+              </div>
+            )}
+            <div
+              style={{
+                fontSize: wordSize(cell.text),
+                fontWeight: 800,
+                lineHeight: 1.1,
+                textAlign: 'center',
+                overflowWrap: 'anywhere',
+                maxWidth: '100%',
+              }}
+            >
+              {cell.text}
+            </div>
+            <div
+              style={{
+                position: 'absolute',
+                right: 6,
+                bottom: 5,
+                width: 11,
+                height: 11,
+                borderRadius: '50%',
+                border: `1.5px solid ${C.dotted}`,
+              }}
+            />
           </div>
         ))}
       </div>

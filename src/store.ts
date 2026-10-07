@@ -190,6 +190,8 @@ export interface StoreState {
   scramble: { hint: ScrambleHint; wordBank: boolean; perPage: number; shuffleOrder: boolean; answerKey: boolean };
   /** ABC Order worksheet: words per group, mix the list before grouping, answer key. */
   alpha: { groupSize: number; shuffleGroups: boolean; answerKey: boolean };
+  /** Roll & Read worksheet: rows per grid, mix the first pass, picture cues. */
+  roll: { rows: number; shuffleOrder: boolean; pictures: boolean };
   currentSetId: string;
   selectedWordId: string | null;
   dragging: DragState | null;
@@ -212,7 +214,7 @@ export interface StoreState {
   /** Optional "Made with Wordlist Wonders" credit line on printed worksheets. */
   printCredit: boolean;
   /** Per-kind shuffle salt; incrementing busts the puzzle memo cache. */
-  salt: { bingo: number; wordsearch: number; crossword: number; spelling: number; scramble: number; alpha: number };
+  salt: { bingo: number; wordsearch: number; crossword: number; spelling: number; scramble: number; alpha: number; roll: number };
   sets: WordSet[];
 }
 
@@ -376,7 +378,10 @@ export interface StoreActions {
   setAlphaGroupSize: (v: number) => void;
   setAlphaShuffle: (v: boolean) => void;
   setAlphaAnswerKey: (v: boolean) => void;
-  reshuffleSheet: (kind: 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble' | 'alpha') => void;
+  setRollRows: (v: number) => void;
+  setRollShuffle: (v: boolean) => void;
+  setRollPictures: (v: boolean) => void;
+  reshuffleSheet: (kind: 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble' | 'alpha' | 'roll') => void;
   toggleSheetEditor: () => void;
   setSheetColW: (w: number) => void;
   setPrintCredit: (v: boolean) => void;
@@ -539,6 +544,7 @@ export const useStore = create<Store>((set, get) => {
     spelling: { prompt: 'readAloud', perPage: 10, shuffleOrder: false, answerKey: true },
     scramble: { hint: 'none', wordBank: true, perPage: 10, shuffleOrder: false, answerKey: true },
     alpha: { groupSize: 5, shuffleGroups: false, answerKey: true },
+    roll: { rows: 6, shuffleOrder: false, pictures: false },
     currentSetId: initial.currentSetId,
     selectedWordId: null,
     dragging: null,
@@ -587,7 +593,7 @@ export const useStore = create<Store>((set, get) => {
     sheetEditorOpen: false,
     sheetColW: 900,
     printCredit: false,
-    salt: { bingo: 0, wordsearch: 0, crossword: 0, spelling: 0, scramble: 0, alpha: 0 },
+    salt: { bingo: 0, wordsearch: 0, crossword: 0, spelling: 0, scramble: 0, alpha: 0, roll: 0 },
     sets: initial.sets,
 
     // ── navigation ──
@@ -1336,6 +1342,9 @@ export const useStore = create<Store>((set, get) => {
     setAlphaGroupSize: (v) => set((s) => ({ alpha: { ...s.alpha, groupSize: v } })),
     setAlphaShuffle: (v) => set((s) => ({ alpha: { ...s.alpha, shuffleGroups: v } })),
     setAlphaAnswerKey: (v) => set((s) => ({ alpha: { ...s.alpha, answerKey: v } })),
+    setRollRows: (v) => set((s) => ({ roll: { ...s.roll, rows: v } })),
+    setRollShuffle: (v) => set((s) => ({ roll: { ...s.roll, shuffleOrder: v } })),
+    setRollPictures: (v) => set((s) => ({ roll: { ...s.roll, pictures: v } })),
     reshuffleSheet: (kind) => set((s) => ({ salt: { ...s.salt, [kind]: s.salt[kind] + 1 } })),
     toggleSheetEditor: () => set((s) => ({ sheetEditorOpen: !s.sheetEditorOpen })),
     setSheetColW: (w) => set({ sheetColW: w }),

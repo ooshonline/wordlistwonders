@@ -47,6 +47,7 @@ export function Display() {
     case 'spelling':
     case 'scramble':
     case 'alpha':
+    case 'roll':
       return <SheetWorkspace />;
     default:
       return null;
