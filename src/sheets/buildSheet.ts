@@ -8,6 +8,7 @@ import { crossLayout } from '../generators/crossLayout';
 import { buildSpellingTest, spellingPages, type SpellingPrompt } from '../generators/spellingTest';
 import { alphabetize, buildWordScramble, scramblePages, type ScrambleHint } from '../generators/wordScramble';
 import { alphaEligible, buildAlphaOrder } from '../generators/alphaOrder';
+import { buildRollRead, ROLL_COLS, type RollCell } from '../generators/rollRead';
 import type { StoreState } from '../store';
 
 /** Free-distribution credit stamped on printed worksheets when opted in (M1). */
@@ -139,7 +140,17 @@ export interface AlphaPage {
   showNameLine: boolean;
   credit?: string;
 }
-export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage | ScramblePage | AlphaPage;
+export interface RollPage {
+  kind: 'roll';
+  /** `rows` arrays of ROLL_COLS cells; column i belongs to die face i + 1. */
+  rows: RollCell[][];
+  pictures: boolean;
+  title: string;
+  subtitle: string;
+  showNameLine: boolean;
+  credit?: string;
+}
+export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage | ScramblePage | AlphaPage | RollPage;
 
 export interface SheetData {
   pages: SheetPage[];
@@ -413,6 +424,28 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
     if (data.total === 0) warning = 'Add some words to this list to build an ABC order sheet.';
     else if (data.total < 2) warning = 'Add at least two words so there is something to put in ABC order.';
     else if (dupes > 0) warning = `${dupes} repeated word(s) appear only once, so every set has one right order.`;
+  } else if (kind === 'roll') {
+    const rr = state.roll;
+    // Repeats are random, so the grid only re-rolls on Shuffle (salt).
+    const data = memoPuzzle(`roll|${sig}|${rr.rows}|${rr.shuffleOrder}|${state.salt.roll}`, () =>
+      buildRollRead(words, { rows: rr.rows, shuffleOrder: rr.shuffleOrder }),
+    );
+    const wordCount = `${data.total} word${data.total === 1 ? '' : 's'}`;
+    data.grids.forEach((g, i) =>
+      pages.push({
+        kind: 'roll',
+        rows: g.rows,
+        pictures: rr.pictures,
+        title: listName + ' — Roll & Read',
+        subtitle: wordCount + (data.grids.length > 1 ? ` · Page ${i + 1} of ${data.grids.length}` : ''),
+        showNameLine: true,
+      }),
+    );
+    kindLabel = 'Roll & Read';
+    summary = `${wordCount} · ${pages.length} page(s)`;
+    if (data.total === 0) warning = 'Add some words to this list to build a Roll & Read sheet.';
+    else if (data.total < ROLL_COLS)
+      warning = `With only ${data.total} word(s), some repeat in the same row. Add ${ROLL_COLS}+ words for more variety.`;
   }
 
   // Stamp the opt-in credit line onto every page (off by default).

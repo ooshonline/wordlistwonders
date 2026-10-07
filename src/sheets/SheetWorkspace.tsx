@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
+import { ROLL_ROW_CHOICES } from '../generators/rollRead';
 import { useStore, currentSet } from '../store';
 import type { DisplayMode } from '../types';
 import { C, DISPLAY } from '../tokens';
@@ -43,7 +44,7 @@ export function SheetWorkspace() {
     () => buildSheet(kind, set, state),
     // Rebuild when inputs that affect the sheet change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.scramble, state.alpha, state.salt, state.printCredit],
+    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.scramble, state.alpha, state.roll, state.salt, state.printCredit],
   );
 
   // Live preview zoom from the measured column width.
@@ -103,7 +104,7 @@ export function SheetWorkspace() {
           {data.showShuffle && (
             <button
               type="button"
-              onClick={() => reshuffle(kind as 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble' | 'alpha')}
+              onClick={() => reshuffle(kind as 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble' | 'alpha' | 'roll')}
               style={outlineBtn}
             >
               Shuffle
@@ -412,6 +413,10 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
   const setAlphaGroupSize = useStore((s) => s.setAlphaGroupSize);
   const setAlphaShuffle = useStore((s) => s.setAlphaShuffle);
   const setAlphaAnswerKey = useStore((s) => s.setAlphaAnswerKey);
+  const roll = useStore((s) => s.roll);
+  const setRollRows = useStore((s) => s.setRollRows);
+  const setRollShuffle = useStore((s) => s.setRollShuffle);
+  const setRollPictures = useStore((s) => s.setRollPictures);
   const setScrambleHint = useStore((s) => s.setScrambleHint);
   const setScrambleWordBank = useStore((s) => s.setScrambleWordBank);
   const setScramblePerPage = useStore((s) => s.setScramblePerPage);
@@ -590,6 +595,39 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
           options={[
             { value: true, label: 'Include' },
             { value: false, label: 'Skip' },
+          ]}
+        />
+      </>
+    );
+  }
+  if (kind === 'roll') {
+    return (
+      <>
+        <LabeledSeg
+          label="Rows"
+          name="vw-rollrows"
+          value={roll.rows}
+          onChange={setRollRows}
+          options={ROLL_ROW_CHOICES.map((n) => ({ value: n as number, label: String(n) }))}
+        />
+        <LabeledSeg
+          label="Order"
+          name="vw-rollorder"
+          value={roll.shuffleOrder}
+          onChange={setRollShuffle}
+          options={[
+            { value: false, label: 'List order' },
+            { value: true, label: 'Mix words' },
+          ]}
+        />
+        <LabeledSeg
+          label="Pictures"
+          name="vw-rollpics"
+          value={roll.pictures}
+          onChange={setRollPictures}
+          options={[
+            { value: false, label: 'Off' },
+            { value: true, label: 'On' },
           ]}
         />
       </>
