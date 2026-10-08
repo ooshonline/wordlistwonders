@@ -4,8 +4,9 @@ import { C, DISPLAY, BODY, RAINBOW } from '../tokens';
 import { Icon, icons } from '../components/ui';
 
 // The canonical live app URL teachers should share (always the deployed site,
-// never the dev/localhost origin).
-const APP_URL = 'https://ooshonline.github.io/wordlistwonders/';
+// never the dev/localhost origin). Served from ribbitpond.com since 2026-10;
+// the old github.io address still works.
+const APP_URL = 'https://ribbitpond.com/wordlist-wonders/';
 
 interface FloatWord {
   key: number;
