@@ -12,7 +12,7 @@ import { buildRollRead, ROLL_COLS, type RollCell } from '../generators/rollRead'
 import type { StoreState } from '../store';
 
 /** Free-distribution credit stamped on printed worksheets when opted in (M1). */
-const CREDIT_LINE = 'Made with Wordlist Wonders · ooshonline.github.io/wordlistwonders';
+const CREDIT_LINE = 'Made with Wordlist Wonders · ribbitpond.com/wordlist-wonders';
 
 // ── page view-models ────────────────────────────────────────────────────────
 export interface BingoCellView {
