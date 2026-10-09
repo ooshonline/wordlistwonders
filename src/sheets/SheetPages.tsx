@@ -1,7 +1,8 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { C, DISPLAY } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
 import type { SheetPage } from './buildSheet';
+import { traceFontPx } from '../generators/traceWrite';
 import {
   bingoCellImageStyle,
   bingoCellStyle,
@@ -74,6 +75,7 @@ export function SheetPageView({ page }: { page: SheetPage }) {
       {page.kind === 'scramble' && <ScrambleBody page={page} />}
       {page.kind === 'alpha' && <AlphaBody page={page} />}
       {page.kind === 'roll' && <RollBody page={page} />}
+      {page.kind === 'trace' && <TraceBody page={page} />}
 
       {page.credit && (
         <div
@@ -609,6 +611,92 @@ function RollBody({ page }: { page: Extract<SheetPage, { kind: 'roll' }> }) {
             />
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// Trace & Write: fixed row heights that fit one page even with a wrapped title
+// and the credit line (≈680px of rows inside the 1056px sheet).
+const TRACE_ROWS_H = 680;
+const TRACE_ROW_GAP = 14;
+const TRACE_BAND_GAP = 6;
+const TRACE_TEXT_W = 712 - 42; // page width minus the number column
+const TRACE_COPY_GAP = 28;
+// Nunito metrics (em): with line-height = band height the baseline sits at
+// band/2 + 0.329em; ascenders reach ~0.76em above it, lowercase ~0.49em.
+const NUNITO_BASELINE = 0.329;
+const NUNITO_CAP = 0.76;
+const NUNITO_X = 0.49;
+
+/** One set of handwriting guide lines (top, dashed middle, baseline), placed
+ *  from the font metrics so the trace letters sit exactly on them. */
+function GuideBand({ band, font, children }: { band: number; font: number; children?: ReactNode }) {
+  const base = band / 2 + NUNITO_BASELINE * font;
+  const line = (top: number, style: CSSProperties) => (
+    <div style={{ position: 'absolute', left: 0, right: 0, top: Math.round(top), ...style }} />
+  );
+  return (
+    <div style={{ position: 'relative', height: band, minWidth: 0 }}>
+      {line(base - NUNITO_CAP * font, { borderTop: `1.5px solid ${C.borderLight}` })}
+      {line(base - NUNITO_X * font, { borderTop: `1.5px dashed ${C.dotted}` })}
+      {line(base, { borderTop: `2px solid ${C.placeholderInk}` })}
+      {children}
+    </div>
+  );
+}
+
+function TraceBody({ page }: { page: Extract<SheetPage, { kind: 'trace' }> }) {
+  const rowH = Math.floor((TRACE_ROWS_H - TRACE_ROW_GAP * (page.perPage - 1)) / page.perPage);
+  const band = Math.floor((rowH - TRACE_BAND_GAP) / 2);
+  const textW = TRACE_TEXT_W - (page.pictures ? rowH + 12 : 0);
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.placeholderInk }}>
+        Trace each word, then write it on your own on the lines below.
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: TRACE_ROW_GAP }}>
+        {page.items.map((item) => {
+          const font = traceFontPx(item.text, page.repeats, band, textW, TRACE_COPY_GAP);
+          return (
+            <div key={item.num} style={{ display: 'flex', gap: 12, height: rowH, minWidth: 0 }}>
+              <div style={{ width: 30, flex: 'none', fontSize: 16, fontWeight: 800, color: C.placeholderInk, paddingTop: 4 }}>
+                {item.num}.
+              </div>
+              {page.pictures && (
+                <div style={{ width: rowH, height: rowH, flex: 'none' }}>
+                  <ImageSlot id={item.slotId} fit="contain" shape="rounded" radius={8} placeholder="" />
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: TRACE_BAND_GAP }}>
+                <GuideBand band={band} font={font}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      gap: TRACE_COPY_GAP,
+                      fontFamily: "'Nunito', sans-serif",
+                      fontSize: font,
+                      fontWeight: 800,
+                      lineHeight: band + 'px',
+                      whiteSpace: 'nowrap',
+                      color: 'transparent',
+                      WebkitTextStroke: `1.4px ${C.placeholderInk}`,
+                      paddingLeft: 6,
+                    }}
+                  >
+                    {Array.from({ length: page.repeats }, (_, i) => (
+                      <span key={i}>{item.text}</span>
+                    ))}
+                  </div>
+                </GuideBand>
+                <GuideBand band={band} font={font} />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

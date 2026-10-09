@@ -10,6 +10,7 @@ import { buildSpellingTest, spellingPages, type SpellingPrompt } from '../genera
 import { alphabetize, buildWordScramble, scramblePages, type ScrambleHint } from '../generators/wordScramble';
 import { alphaEligible, buildAlphaOrder } from '../generators/alphaOrder';
 import { buildRollRead, ROLL_COLS, type RollCell } from '../generators/rollRead';
+import { buildTraceWrite, type TraceItem } from '../generators/traceWrite';
 import type { StoreState } from '../store';
 
 /** Free-distribution credit stamped on printed worksheets when opted in (M1). */
@@ -151,7 +152,20 @@ export interface RollPage {
   showNameLine: boolean;
   credit?: string;
 }
-export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage | ScramblePage | AlphaPage | RollPage;
+export interface TracePage {
+  kind: 'trace';
+  /** Rows on this page; the renderer sizes them to share the page height. */
+  items: TraceItem[];
+  /** Rows per full page, so a short last page keeps the same row height. */
+  perPage: number;
+  repeats: number;
+  pictures: boolean;
+  title: string;
+  subtitle: string;
+  showNameLine: boolean;
+  credit?: string;
+}
+export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage | ScramblePage | AlphaPage | RollPage | TracePage;
 
 export interface SheetData {
   pages: SheetPage[];
@@ -449,6 +463,26 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
     if (data.total === 0) warning = 'Add some words to this list to build a Roll & Read sheet.';
     else if (data.total < ROLL_COLS)
       warning = `With only ${data.total} word(s), some repeat in the same row. Add ${ROLL_COLS}+ words for more variety.`;
+  } else if (kind === 'trace') {
+    const tw = state.trace;
+    // No randomness: rows follow the list order, so no memo/salt is needed.
+    const data = buildTraceWrite(words, tw.perPage);
+    const wordCount = `${data.total} word${data.total === 1 ? '' : 's'}`;
+    data.pages.forEach((items, i) =>
+      pages.push({
+        kind: 'trace',
+        items,
+        perPage: data.perPage,
+        repeats: tw.repeats,
+        pictures: tw.pictures,
+        title: listName + ' — Trace & Write',
+        subtitle: wordCount + (data.pages.length > 1 ? ` · Page ${i + 1} of ${data.pages.length}` : ''),
+        showNameLine: true,
+      }),
+    );
+    kindLabel = 'Trace & Write';
+    summary = `${wordCount} · ${pages.length} page(s)`;
+    if (data.total === 0) warning = 'Add some words to this list to build a Trace & Write sheet.';
   }
 
   // Stamp the opt-in credit line onto every page (off by default).
@@ -461,7 +495,7 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
     warning,
     showClueColumn: kind === 'crossword',
     // Spelling only shuffles when the teacher opts into randomized order.
-    showShuffle: kind === 'spelling' ? state.spelling.shuffleOrder : kind !== 'flashcards',
+    showShuffle: kind === 'spelling' ? state.spelling.shuffleOrder : kind !== 'flashcards' && kind !== 'trace',
     editLabels,
   };
 }

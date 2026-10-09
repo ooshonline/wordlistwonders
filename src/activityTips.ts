@@ -85,4 +85,8 @@ export const ACTIVITY_TIPS: Record<DisplayMode, string[]> = {
     'Pairs take turns rolling a die and reading the next word in that column.',
     'Color the circle after each word. Which column fills up first?',
   ],
+  trace: [
+    'Students trace each word slowly, then write it on the empty lines below.',
+    'Say the word aloud while tracing it. Fewer words per page means bigger letters.',
+  ],
 };

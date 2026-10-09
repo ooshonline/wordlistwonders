@@ -20,6 +20,7 @@ import type { ScrambleHint } from './generators/wordScramble';
 import { buildSentenceSet, type SentenceCard, type SentenceMode } from './generators/sentenceBuilder';
 import { buildWordOfDay, type WordOfDayCard } from './generators/wordOfDay';
 import { buildSecretCards, clampSecretSeconds, SECRET_DEFAULT_SECONDS, type SecretCard, type SecretMode } from './generators/secretWord';
+import { TRACE_DEFAULT_PER_PAGE, TRACE_DEFAULT_REPEATS } from './generators/traceWrite';
 import { buildGuessCards, clampMisses, guessProgress, GUESS_DEFAULT_MISSES, type GuessCard } from './generators/guessWord';
 import {
   buildCategorySort,
@@ -192,6 +193,8 @@ export interface StoreState {
   alpha: { groupSize: number; shuffleGroups: boolean; answerKey: boolean };
   /** Roll & Read worksheet: rows per grid, mix the first pass, picture cues. */
   roll: { rows: number; shuffleOrder: boolean; pictures: boolean };
+  /** Trace & Write worksheet: words per page, hollow copies per row, picture cues. */
+  trace: { perPage: number; repeats: number; pictures: boolean };
   currentSetId: string;
   selectedWordId: string | null;
   dragging: DragState | null;
@@ -381,6 +384,9 @@ export interface StoreActions {
   setRollRows: (v: number) => void;
   setRollShuffle: (v: boolean) => void;
   setRollPictures: (v: boolean) => void;
+  setTracePerPage: (v: number) => void;
+  setTraceRepeats: (v: number) => void;
+  setTracePictures: (v: boolean) => void;
   reshuffleSheet: (kind: 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble' | 'alpha' | 'roll') => void;
   toggleSheetEditor: () => void;
   setSheetColW: (w: number) => void;
@@ -545,6 +551,7 @@ export const useStore = create<Store>((set, get) => {
     scramble: { hint: 'none', wordBank: true, perPage: 10, shuffleOrder: false, answerKey: true },
     alpha: { groupSize: 5, shuffleGroups: false, answerKey: true },
     roll: { rows: 6, shuffleOrder: false, pictures: false },
+    trace: { perPage: TRACE_DEFAULT_PER_PAGE, repeats: TRACE_DEFAULT_REPEATS, pictures: false },
     currentSetId: initial.currentSetId,
     selectedWordId: null,
     dragging: null,
@@ -1345,6 +1352,9 @@ export const useStore = create<Store>((set, get) => {
     setRollRows: (v) => set((s) => ({ roll: { ...s.roll, rows: v } })),
     setRollShuffle: (v) => set((s) => ({ roll: { ...s.roll, shuffleOrder: v } })),
     setRollPictures: (v) => set((s) => ({ roll: { ...s.roll, pictures: v } })),
+    setTracePerPage: (v) => set((s) => ({ trace: { ...s.trace, perPage: v } })),
+    setTraceRepeats: (v) => set((s) => ({ trace: { ...s.trace, repeats: v } })),
+    setTracePictures: (v) => set((s) => ({ trace: { ...s.trace, pictures: v } })),
     reshuffleSheet: (kind) => set((s) => ({ salt: { ...s.salt, [kind]: s.salt[kind] + 1 } })),
     toggleSheetEditor: () => set((s) => ({ sheetEditorOpen: !s.sheetEditorOpen })),
     setSheetColW: (w) => set({ sheetColW: w }),

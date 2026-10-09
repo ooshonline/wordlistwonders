@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { ROLL_ROW_CHOICES } from '../generators/rollRead';
+import { TRACE_PER_PAGE_CHOICES, TRACE_REPEAT_CHOICES } from '../generators/traceWrite';
 import { useStore, currentSet } from '../store';
 import type { DisplayMode } from '../types';
 import { C, DISPLAY } from '../tokens';
@@ -44,7 +45,7 @@ export function SheetWorkspace() {
     () => buildSheet(kind, set, state),
     // Rebuild when inputs that affect the sheet change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.scramble, state.alpha, state.roll, state.salt, state.printCredit],
+    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.scramble, state.alpha, state.roll, state.trace, state.salt, state.printCredit],
   );
 
   // Live preview zoom from the measured column width.
@@ -417,6 +418,10 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
   const setRollRows = useStore((s) => s.setRollRows);
   const setRollShuffle = useStore((s) => s.setRollShuffle);
   const setRollPictures = useStore((s) => s.setRollPictures);
+  const trace = useStore((s) => s.trace);
+  const setTracePerPage = useStore((s) => s.setTracePerPage);
+  const setTraceRepeats = useStore((s) => s.setTraceRepeats);
+  const setTracePictures = useStore((s) => s.setTracePictures);
   const setScrambleHint = useStore((s) => s.setScrambleHint);
   const setScrambleWordBank = useStore((s) => s.setScrambleWordBank);
   const setScramblePerPage = useStore((s) => s.setScramblePerPage);
@@ -595,6 +600,36 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
           options={[
             { value: true, label: 'Include' },
             { value: false, label: 'Skip' },
+          ]}
+        />
+      </>
+    );
+  }
+  if (kind === 'trace') {
+    return (
+      <>
+        <LabeledSeg
+          label="Per page"
+          name="vw-traceperpage"
+          value={trace.perPage}
+          onChange={setTracePerPage}
+          options={TRACE_PER_PAGE_CHOICES.map((n) => ({ value: n as number, label: String(n) }))}
+        />
+        <LabeledSeg
+          label="Trace"
+          name="vw-tracerepeats"
+          value={trace.repeats}
+          onChange={setTraceRepeats}
+          options={TRACE_REPEAT_CHOICES.map((n) => ({ value: n as number, label: n + '×' }))}
+        />
+        <LabeledSeg
+          label="Pictures"
+          name="vw-tracepics"
+          value={trace.pictures}
+          onChange={setTracePictures}
+          options={[
+            { value: false, label: 'Off' },
+            { value: true, label: 'On' },
           ]}
         />
       </>
