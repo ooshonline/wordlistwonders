@@ -3,6 +3,7 @@ import { memoPuzzle } from '../generators/cache';
 import { wordSig, cleanWord } from '../generators/random';
 import { buildBingoCards } from '../generators/bingo';
 import { buildWordSearch } from '../generators/wordsearch';
+import { searchCellPx } from '../generators/searchLayout';
 import { buildCrossword } from '../generators/crossword';
 import { crossLayout } from '../generators/crossLayout';
 import { buildSpellingTest, spellingPages, type SpellingPrompt } from '../generators/spellingTest';
@@ -262,7 +263,9 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
     const data = memoPuzzle(`ws|${sig}|${ws.size}|${ws.diagonals}|${ws.backwards}|${state.salt.wordsearch}`, () =>
       buildWordSearch(words, ws.size, ws.diagonals, ws.backwards),
     );
-    const px = Math.floor(Math.min(46, 700 / Math.max(1, data.size)));
+    // Size cells so grid + word bank fit one page (B9: a wrapped long title +
+    // credit line overflowed). Measured on the longer answer-key title.
+    const px = searchCellPx(data.size, data.bank.length, (listName + ' — Word Search (Answer Key)').length);
     const mkPage = (isKey: boolean): SearchPage => ({
       kind: 'search',
       size: data.size,
