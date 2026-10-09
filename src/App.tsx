@@ -32,9 +32,10 @@ const MODE_LABELS: Record<DisplayMode, string> = {
   scramble: 'Word Scramble',
   alpha: 'ABC Order',
   roll: 'Roll & Read',
+  trace: 'Trace & Write',
 };
 
-const PRINT_MODES: DisplayMode[] = ['flashcards', 'bingo', 'wordsearch', 'crossword', 'spelling', 'scramble', 'alpha', 'roll'];
+const PRINT_MODES: DisplayMode[] = ['flashcards', 'bingo', 'wordsearch', 'crossword', 'spelling', 'scramble', 'alpha', 'roll', 'trace'];
 const PROJECT_MODES: DisplayMode[] = ['grid', 'carousel', 'reveal', 'quiz', 'missing', 'flyswatter', 'matching', 'sentence', 'wordday', 'category', 'guess', 'secret'];
 
 export function App() {

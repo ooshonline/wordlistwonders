@@ -48,6 +48,7 @@ export function Display() {
     case 'scramble':
     case 'alpha':
     case 'roll':
+    case 'trace':
       return <SheetWorkspace />;
     default:
       return null;
