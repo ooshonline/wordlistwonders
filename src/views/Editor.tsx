@@ -23,6 +23,9 @@ export function Editor() {
   const addWord = useStore((s) => s.addWord);
   const addWords = useStore((s) => s.addWords);
   const removeWord = useStore((s) => s.removeWord);
+  const moveWord = useStore((s) => s.moveWord);
+  const moveWordTo = useStore((s) => s.moveWordTo);
+  const sortWords = useStore((s) => s.sortWords);
   const updateWordField = useStore((s) => s.updateWordField);
   const setWordTier = useStore((s) => s.setWordTier);
   const setWordColor = useStore((s) => s.setWordColor);
@@ -34,6 +37,10 @@ export function Editor() {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  // Drag-to-reorder (F4): the word being dragged, and the row it's hovering.
+  // Touch / keyboard users get the ▲ ▼ buttons instead (HTML5 drag is mouse-only).
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   if (!set) return null;
 
@@ -155,20 +162,87 @@ export function Editor() {
         />
       </div>
 
+      {set.words.length > 1 && (
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14, maxWidth: 940 }}>
+          <span style={{ fontWeight: 700, fontSize: 13, color: C.ink2, marginRight: 4 }}>Word order:</span>
+          <button type="button" onClick={() => sortWords('az')} style={sortBtn}>
+            Sort A–Z
+          </button>
+          <button type="button" onClick={() => sortWords('tier')} style={sortBtn}>
+            Sort by tier
+          </button>
+          <span style={{ fontSize: 13, color: C.ink2, fontWeight: 600 }}>
+            or drag a word by its handle — the order is used in every activity.
+          </span>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gap: 14, maxWidth: 940 }}>
-        {set.words.map((w) => (
+        {set.words.map((w, i) => (
           <div
             key={w.id}
+            onDragOver={(e) => {
+              if (!dragId) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              if (overId !== w.id) setOverId(w.id);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (dragId && dragId !== w.id) moveWordTo(dragId, w.id);
+              setDragId(null);
+              setOverId(null);
+            }}
             style={{
               background: C.surface,
               borderRadius: 18,
               border: `1px solid ${C.borderLight}`,
+              // Drop-target highlight while another word is dragged over this row.
+              boxShadow: overId === w.id && dragId !== w.id ? `0 0 0 3px ${C.teal}` : undefined,
+              opacity: dragId === w.id ? 0.45 : 1,
               display: 'flex',
               alignItems: 'center',
               gap: 16,
               padding: 14,
             }}
           >
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flex: 'none' }}>
+              <button
+                type="button"
+                aria-label={`Move "${w.text}" up`}
+                disabled={i === 0}
+                onClick={() => moveWord(w.id, -1)}
+                style={arrowBtn(i === 0)}
+              >
+                <Icon path={icons.chevronUp} size={16} />
+              </button>
+              <span
+                draggable
+                title="Drag to reorder"
+                aria-hidden="true"
+                onDragStart={(e) => {
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', w.id);
+                  setDragId(w.id);
+                }}
+                onDragEnd={() => {
+                  setDragId(null);
+                  setOverId(null);
+                }}
+                style={{ color: C.ink2, cursor: 'grab', display: 'flex', padding: '2px 0' }}
+              >
+                <Icon path={icons.grip} size={18} />
+              </span>
+              <button
+                type="button"
+                aria-label={`Move "${w.text}" down`}
+                disabled={i === set.words.length - 1}
+                onClick={() => moveWord(w.id, 1)}
+                style={arrowBtn(i === set.words.length - 1)}
+              >
+                <Icon path={icons.chevronDown} size={16} />
+              </button>
+            </div>
             <div style={{ width: 72, height: 72, flex: 'none' }}>
               <ImageSlot id={`slot-${w.id}`} fit="contain" shape="rounded" radius={14} placeholder="Image" />
             </div>
@@ -388,6 +462,29 @@ const fileBtn: React.CSSProperties = {
   fontSize: 14,
   cursor: 'pointer',
 };
+const sortBtn: React.CSSProperties = {
+  padding: '7px 14px',
+  borderRadius: 999,
+  background: C.surface,
+  border: `2px solid ${C.borderLight}`,
+  color: C.ink,
+  fontWeight: 800,
+  fontSize: 13,
+  cursor: 'pointer',
+};
+const arrowBtn = (disabled: boolean): React.CSSProperties => ({
+  width: 26,
+  height: 22,
+  borderRadius: 8,
+  background: 'transparent',
+  border: 'none',
+  color: disabled ? C.borderLight : C.ink2,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: disabled ? 'default' : 'pointer',
+  padding: 0,
+});
 const metaInput: React.CSSProperties = {
   padding: '9px 14px',
   borderRadius: 12,

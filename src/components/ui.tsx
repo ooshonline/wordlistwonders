@@ -286,6 +286,19 @@ export const icons = {
   ),
   chevronLeft: <path d="m15 18-6-6 6-6" />,
   chevronRight: <path d="m9 18 6-6-6-6" />,
+  chevronUp: <path d="m18 15-6-6-6 6" />,
+  chevronDown: <path d="m6 9 6 6 6-6" />,
+  // Six-dot drag handle (filled dots).
+  grip: (
+    <>
+      {[5, 12, 19].map((y) => (
+        <g key={y} fill="currentColor" stroke="none">
+          <circle cx="9" cy={y} r="1.6" />
+          <circle cx="15" cy={y} r="1.6" />
+        </g>
+      ))}
+    </>
+  ),
   resize: (
     <>
       <path d="M21 15v6h-6" />

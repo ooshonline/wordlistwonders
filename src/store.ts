@@ -13,6 +13,7 @@ import type {
 import { SEED_SETS } from './seed';
 import { shuffle } from './generators/random';
 import { fillMissingClues } from './generators/clueSuggest';
+import { moveWordBy, moveWordTo, sameOrder, sortAZ, sortByTier } from './generators/wordOrder';
 import { autoPos as wallAutoPos } from './activities/wallLayout';
 import { buildMatchDeck, type MatchCard, type MatchMode } from './generators/matching';
 import type { SpellingPrompt } from './generators/spellingTest';
@@ -255,6 +256,12 @@ export interface StoreActions {
   /** Bulk-append words parsed from a pasted blob (split on newlines / commas). */
   addWords: (texts: string[]) => void;
   removeWord: (id: string) => void;
+  /** Move one word up (-1) or down (+1) in the current set (F4). */
+  moveWord: (id: string, delta: number) => void;
+  /** Drag-and-drop: put word `id` where `targetId` sits (F4). */
+  moveWordTo: (id: string, targetId: string) => void;
+  /** Re-order the whole set A–Z or by tier, with an undo toast (F4). */
+  sortWords: (by: 'az' | 'tier') => void;
   updateWordField: (id: string, field: keyof Word, val: unknown) => void;
   /** Fill blank clues in the current set with local suggestions (F6). */
   suggestMissingClues: () => void;
@@ -464,6 +471,10 @@ export const useStore = create<Store>((set, get) => {
     persist(st.sets, st.currentSetId);
     if (cb) cb();
   };
+
+  // Replace the current set's word list with a re-ordered copy (F4).
+  const setCurrentWords = (reorder: (words: Word[]) => Word[]) =>
+    mutateSets((sets) => sets.map((s) => (s.id === get().currentSetId ? { ...s, words: reorder(s.words) } : s)));
 
   const showUndoToast = (message: string, restoreFn: () => void) => {
     if (toastTimer) clearTimeout(toastTimer);
@@ -769,6 +780,21 @@ export const useStore = create<Store>((set, get) => {
         sets.map((s) => (s.id === get().currentSetId ? { ...s, words: s.words.filter((w) => w.id !== id) } : s)),
       );
       showUndoToast('Word deleted.', () => mutateSets(() => snapshot));
+    },
+    moveWord: (id, delta) => setCurrentWords((ws) => moveWordBy(ws, id, delta)),
+    moveWordTo: (id, targetId) => setCurrentWords((ws) => moveWordTo(ws, id, targetId)),
+    sortWords: (by) => {
+      const cur = getCurrentSet().words;
+      const sorted = by === 'az' ? sortAZ(cur) : sortByTier(cur);
+      if (sameOrder(cur, sorted)) {
+        showNotice(by === 'az' ? 'Already in A–Z order.' : 'Already sorted by tier.');
+        return;
+      }
+      const snapshot = get().sets;
+      setCurrentWords(() => sorted);
+      showUndoToast(by === 'az' ? 'Sorted A–Z.' : 'Sorted by tier: Key, Normal, Bonus.', () =>
+        mutateSets(() => snapshot),
+      );
     },
     updateWordField: (id, field, val) =>
       mutateSets((sets) =>
