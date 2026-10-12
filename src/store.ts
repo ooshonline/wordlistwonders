@@ -22,6 +22,7 @@ import { buildSentenceSet, type SentenceCard, type SentenceMode } from './genera
 import { buildWordOfDay, type WordOfDayCard } from './generators/wordOfDay';
 import { buildSecretCards, clampSecretSeconds, SECRET_DEFAULT_SECONDS, type SecretCard, type SecretMode } from './generators/secretWord';
 import { TRACE_DEFAULT_PER_PAGE, TRACE_DEFAULT_REPEATS } from './generators/traceWrite';
+import { LETTERS_DEFAULT_BLANKS, LETTERS_DEFAULT_PER_PAGE, type LettersMode } from './generators/missingLetters';
 import { buildGuessCards, clampMisses, guessProgress, GUESS_DEFAULT_MISSES, type GuessCard } from './generators/guessWord';
 import {
   buildCategorySort,
@@ -196,6 +197,8 @@ export interface StoreState {
   roll: { rows: number; shuffleOrder: boolean; pictures: boolean };
   /** Trace & Write worksheet: words per page, hollow copies per row, picture cues. */
   trace: { perPage: number; repeats: number; pictures: boolean };
+  /** Missing Letters worksheet (CX18): letters hidden per word, which letters, layout. */
+  letters: { blanks: number; mode: LettersMode; pictures: boolean; wordBank: boolean; perPage: number; shuffleOrder: boolean; answerKey: boolean };
   currentSetId: string;
   selectedWordId: string | null;
   dragging: DragState | null;
@@ -218,7 +221,7 @@ export interface StoreState {
   /** Optional "Made with Wordlist Wonders" credit line on printed worksheets. */
   printCredit: boolean;
   /** Per-kind shuffle salt; incrementing busts the puzzle memo cache. */
-  salt: { bingo: number; wordsearch: number; crossword: number; spelling: number; scramble: number; alpha: number; roll: number };
+  salt: { bingo: number; wordsearch: number; crossword: number; spelling: number; scramble: number; alpha: number; roll: number; letters: number };
   sets: WordSet[];
 }
 
@@ -394,7 +397,14 @@ export interface StoreActions {
   setTracePerPage: (v: number) => void;
   setTraceRepeats: (v: number) => void;
   setTracePictures: (v: boolean) => void;
-  reshuffleSheet: (kind: 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble' | 'alpha' | 'roll') => void;
+  setLettersBlanks: (v: number) => void;
+  setLettersMode: (v: LettersMode) => void;
+  setLettersPictures: (v: boolean) => void;
+  setLettersWordBank: (v: boolean) => void;
+  setLettersPerPage: (v: number) => void;
+  setLettersShuffle: (v: boolean) => void;
+  setLettersAnswerKey: (v: boolean) => void;
+  reshuffleSheet: (kind: 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble' | 'alpha' | 'roll' | 'letters') => void;
   toggleSheetEditor: () => void;
   setSheetColW: (w: number) => void;
   setPrintCredit: (v: boolean) => void;
@@ -563,6 +573,7 @@ export const useStore = create<Store>((set, get) => {
     alpha: { groupSize: 5, shuffleGroups: false, answerKey: true },
     roll: { rows: 6, shuffleOrder: false, pictures: false },
     trace: { perPage: TRACE_DEFAULT_PER_PAGE, repeats: TRACE_DEFAULT_REPEATS, pictures: false },
+    letters: { blanks: LETTERS_DEFAULT_BLANKS, mode: 'any', pictures: false, wordBank: true, perPage: LETTERS_DEFAULT_PER_PAGE, shuffleOrder: false, answerKey: true },
     currentSetId: initial.currentSetId,
     selectedWordId: null,
     dragging: null,
@@ -611,7 +622,7 @@ export const useStore = create<Store>((set, get) => {
     sheetEditorOpen: false,
     sheetColW: 900,
     printCredit: false,
-    salt: { bingo: 0, wordsearch: 0, crossword: 0, spelling: 0, scramble: 0, alpha: 0, roll: 0 },
+    salt: { bingo: 0, wordsearch: 0, crossword: 0, spelling: 0, scramble: 0, alpha: 0, roll: 0, letters: 0 },
     sets: initial.sets,
 
     // ── navigation ──
@@ -1381,6 +1392,13 @@ export const useStore = create<Store>((set, get) => {
     setTracePerPage: (v) => set((s) => ({ trace: { ...s.trace, perPage: v } })),
     setTraceRepeats: (v) => set((s) => ({ trace: { ...s.trace, repeats: v } })),
     setTracePictures: (v) => set((s) => ({ trace: { ...s.trace, pictures: v } })),
+    setLettersBlanks: (v) => set((s) => ({ letters: { ...s.letters, blanks: v } })),
+    setLettersMode: (v) => set((s) => ({ letters: { ...s.letters, mode: v } })),
+    setLettersPictures: (v) => set((s) => ({ letters: { ...s.letters, pictures: v } })),
+    setLettersWordBank: (v) => set((s) => ({ letters: { ...s.letters, wordBank: v } })),
+    setLettersPerPage: (v) => set((s) => ({ letters: { ...s.letters, perPage: v } })),
+    setLettersShuffle: (v) => set((s) => ({ letters: { ...s.letters, shuffleOrder: v } })),
+    setLettersAnswerKey: (v) => set((s) => ({ letters: { ...s.letters, answerKey: v } })),
     reshuffleSheet: (kind) => set((s) => ({ salt: { ...s.salt, [kind]: s.salt[kind] + 1 } })),
     toggleSheetEditor: () => set((s) => ({ sheetEditorOpen: !s.sheetEditorOpen })),
     setSheetColW: (w) => set({ sheetColW: w }),

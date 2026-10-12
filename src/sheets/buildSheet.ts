@@ -11,6 +11,7 @@ import { alphabetize, buildWordScramble, scramblePages, type ScrambleHint } from
 import { alphaEligible, buildAlphaOrder } from '../generators/alphaOrder';
 import { buildRollRead, ROLL_COLS, type RollCell } from '../generators/rollRead';
 import { buildTraceWrite, type TraceItem } from '../generators/traceWrite';
+import { buildMissingLetters, itemBoxPx, lettersLayout, lettersPages, type LetterCell } from '../generators/missingLetters';
 import type { StoreState } from '../store';
 
 /** Free-distribution credit stamped on printed worksheets when opted in (M1). */
@@ -165,7 +166,30 @@ export interface TracePage {
   showNameLine: boolean;
   credit?: string;
 }
-export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage | ScramblePage | AlphaPage | RollPage | TracePage;
+export interface LettersItemView {
+  num: number;
+  cells: LetterCell[];
+  /** This row's letter-box size (long phrases shrink, short words don't). */
+  boxPx: number;
+  slotId: string;
+}
+export interface LettersPage {
+  kind: 'letters';
+  items: LettersItemView[];
+  /** Grid columns + box / picture sizes that fit this page (lettersLayout). */
+  cols: 1 | 2;
+  boxPx: number;
+  picPx: number;
+  rowPx: number;
+  /** Alphabetized answers for the word bank box (empty = no bank). */
+  wordBank: string[];
+  isKey: boolean;
+  title: string;
+  subtitle: string;
+  showNameLine: boolean;
+  credit?: string;
+}
+export type SheetPage = BingoPage | FlashPage | SearchPage | CrossPage | SpellingPage | ScramblePage | AlphaPage | RollPage | TracePage | LettersPage;
 
 export interface SheetData {
   pages: SheetPage[];
@@ -483,6 +507,40 @@ export function buildSheet(kind: DisplayMode, set: WordSet, state: StoreState): 
     kindLabel = 'Trace & Write';
     summary = `${wordCount} · ${pages.length} page(s)`;
     if (data.total === 0) warning = 'Add some words to this list to build a Trace & Write sheet.';
+  } else if (kind === 'letters') {
+    const ml = state.letters;
+    // Which letters go missing is random, so it only re-rolls on Shuffle (salt);
+    // the student pages and the key share one build so the key always matches.
+    const data = memoPuzzle(
+      `letters|${sig}|${ml.blanks}|${ml.mode}|${ml.perPage}|${ml.shuffleOrder}|${state.salt.letters}`,
+      () => buildMissingLetters(words, { blanks: ml.blanks, mode: ml.mode, perPage: ml.perPage, shuffleOrder: ml.shuffleOrder }),
+    );
+    const chunks = lettersPages(data);
+    const wordCount = `${data.total} word${data.total === 1 ? '' : 's'}`;
+    const mkPage = (chunk: typeof chunks[number], idx: number, isKey: boolean): LettersPage => {
+      const layout = lettersLayout(Math.max(...chunk.map((it) => it.cells.length)), chunk.length, ml.pictures);
+      return {
+        kind: 'letters',
+        // The key shows every box filled; hidden letters are highlighted.
+        items: chunk.map((it) => ({ num: it.num, cells: it.cells, boxPx: itemBoxPx(it.cells.length, layout), slotId: it.slotId })),
+        ...layout,
+        wordBank:
+          ml.wordBank && !isKey
+            ? chunk.map((it) => it.answer.toLowerCase()).sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
+            : [],
+        isKey,
+        title: listName + ' — Missing Letters' + (isKey ? ' (Answer Key)' : ''),
+        subtitle: wordCount + (chunks.length > 1 ? ` · Page ${idx + 1} of ${chunks.length}` : ''),
+        showNameLine: !isKey,
+      };
+    };
+    chunks.forEach((chunk, i) => pages.push(mkPage(chunk, i, false)));
+    if (ml.answerKey) chunks.forEach((chunk, i) => pages.push(mkPage(chunk, i, true)));
+    kindLabel = 'Missing Letters';
+    summary = `${wordCount} · ${pages.length} page(s)`;
+    const skipped = words.filter((w) => (w.text || '').trim()).length - data.total;
+    if (data.total === 0) warning = 'Add some words to this list to build a Missing Letters sheet.';
+    else if (skipped > 0) warning = `${skipped} one-letter word(s) are left out — there's nothing to fill in.`;
   }
 
   // Stamp the opt-in credit line onto every page (off by default).

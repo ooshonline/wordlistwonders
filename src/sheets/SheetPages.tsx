@@ -76,6 +76,7 @@ export function SheetPageView({ page }: { page: SheetPage }) {
       {page.kind === 'alpha' && <AlphaBody page={page} />}
       {page.kind === 'roll' && <RollBody page={page} />}
       {page.kind === 'trace' && <TraceBody page={page} />}
+      {page.kind === 'letters' && <LettersBody page={page} />}
 
       {page.credit && (
         <div
@@ -387,6 +388,105 @@ const scrambleFirst: CSSProperties = {
   fontWeight: 800,
   color: C.placeholderInk,
 };
+
+function LettersBody({ page }: { page: Extract<SheetPage, { kind: 'letters' }> }) {
+  const { picPx } = page;
+  const instruction = page.isKey
+    ? 'Answer key — the missing letters are shaded.'
+    : page.wordBank.length
+      ? 'Fill in the missing letters to make a word from the word bank.'
+      : 'Fill in the missing letters to finish each word.';
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: C.placeholderInk }}>{instruction}</div>
+
+      {page.wordBank.length > 0 && (
+        <div
+          style={{
+            border: `2px solid ${C.borderLight}`,
+            borderRadius: 12,
+            padding: '10px 14px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'baseline',
+            gap: '6px 18px',
+          }}
+        >
+          <span style={{ ...scrambleLabel, marginRight: 4 }}>Word bank</span>
+          {page.wordBank.map((word, i) => (
+            <span key={i} style={{ fontSize: 16, fontWeight: 700 }}>
+              {word}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${page.cols}, minmax(0,1fr))`,
+          gap: '14px 40px',
+          alignContent: 'start',
+        }}
+      >
+        {page.items.map(({ boxPx, ...it }) => (
+          <div key={it.num} style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, minHeight: page.rowPx }}>
+            <span style={{ ...spellNum, minWidth: 24 }}>{it.num}.</span>
+            {picPx > 0 && (
+              <div
+                style={{
+                  width: picPx,
+                  height: picPx,
+                  flex: 'none',
+                  border: `2px solid ${C.borderLight}`,
+                  borderRadius: 10,
+                  overflow: 'hidden',
+                  background: '#ffffff',
+                }}
+              >
+                <ImageSlot id={it.slotId} fit="contain" shape="rounded" radius={8} placeholder="" />
+              </div>
+            )}
+            {/* One box per letter; spaces / hyphens print as plain gaps. */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, minWidth: 0 }}>
+              {it.cells.map((cell, k) =>
+                cell.isLetter ? (
+                  <span
+                    key={k}
+                    style={{
+                      width: boxPx,
+                      height: boxPx,
+                      flex: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 6,
+                      // Gaps get a darker frame so they stand out in black-and-white print.
+                      border: cell.hidden ? `2px solid ${C.ink}` : `2px solid ${C.dotted}`,
+                      background: cell.hidden && page.isKey ? C.tealTint : '#ffffff',
+                      fontFamily: DISPLAY,
+                      fontSize: Math.round(boxPx * 0.62),
+                      fontWeight: 800,
+                      lineHeight: 1,
+                      color: cell.hidden ? C.tealInk : C.ink,
+                    }}
+                  >
+                    {cell.hidden && !page.isKey ? '' : cell.ch}
+                  </span>
+                ) : (
+                  <span key={k} style={{ width: cell.ch === ' ' ? boxPx / 2 : 'auto', fontSize: Math.round(boxPx * 0.62), fontWeight: 800, alignSelf: 'center' }}>
+                    {cell.ch === ' ' ? '' : cell.ch}
+                  </span>
+                ),
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function CrossBody({ page }: { page: Extract<SheetPage, { kind: 'cross' }> }) {
   const px = page.cellPx;
