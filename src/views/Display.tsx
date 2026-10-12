@@ -49,6 +49,7 @@ export function Display() {
     case 'alpha':
     case 'roll':
     case 'trace':
+    case 'letters':
       return <SheetWorkspace />;
     default:
       return null;

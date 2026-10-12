@@ -45,7 +45,7 @@ export function SheetWorkspace() {
     () => buildSheet(kind, set, state),
     // Rebuild when inputs that affect the sheet change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.scramble, state.alpha, state.roll, state.trace, state.salt, state.printCredit],
+    [kind, set, state.bingo, state.flash, state.wordsearch, state.crossword, state.spelling, state.scramble, state.alpha, state.roll, state.trace, state.letters, state.salt, state.printCredit],
   );
 
   // Live preview zoom from the measured column width.
@@ -105,7 +105,7 @@ export function SheetWorkspace() {
           {data.showShuffle && (
             <button
               type="button"
-              onClick={() => reshuffle(kind as 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble' | 'alpha' | 'roll')}
+              onClick={() => reshuffle(kind as 'bingo' | 'wordsearch' | 'crossword' | 'spelling' | 'scramble' | 'alpha' | 'roll' | 'letters')}
               style={outlineBtn}
             >
               Shuffle
@@ -423,6 +423,14 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
   const setTraceRepeats = useStore((s) => s.setTraceRepeats);
   const setTracePictures = useStore((s) => s.setTracePictures);
   const setScrambleHint = useStore((s) => s.setScrambleHint);
+  const letters = useStore((s) => s.letters);
+  const setLettersBlanks = useStore((s) => s.setLettersBlanks);
+  const setLettersMode = useStore((s) => s.setLettersMode);
+  const setLettersPictures = useStore((s) => s.setLettersPictures);
+  const setLettersWordBank = useStore((s) => s.setLettersWordBank);
+  const setLettersPerPage = useStore((s) => s.setLettersPerPage);
+  const setLettersShuffle = useStore((s) => s.setLettersShuffle);
+  const setLettersAnswerKey = useStore((s) => s.setLettersAnswerKey);
   const setScrambleWordBank = useStore((s) => s.setScrambleWordBank);
   const setScramblePerPage = useStore((s) => s.setScramblePerPage);
   const setScrambleShuffle = useStore((s) => s.setScrambleShuffle);
@@ -693,6 +701,76 @@ function SheetControls({ kind }: { kind: DisplayMode }) {
           name="vw-alphakey"
           value={alpha.answerKey}
           onChange={setAlphaAnswerKey}
+          options={[
+            { value: true, label: 'Include' },
+            { value: false, label: 'Skip' },
+          ]}
+        />
+      </>
+    );
+  }
+  if (kind === 'letters') {
+    return (
+      <>
+        <LabeledSeg
+          label="Missing"
+          name="vw-letblanks"
+          value={letters.blanks}
+          onChange={setLettersBlanks}
+          options={[1, 2, 3].map((n) => ({ value: n, label: n === 1 ? '1 letter' : `${n} letters` }))}
+        />
+        <LabeledSeg
+          label="Which letters"
+          name="vw-letmode"
+          value={letters.mode}
+          onChange={setLettersMode}
+          options={[
+            { value: 'any', label: 'Any' },
+            { value: 'vowels', label: 'Vowels only' },
+          ]}
+        />
+        <LabeledSeg
+          label="Pictures"
+          name="vw-letpics"
+          value={letters.pictures}
+          onChange={setLettersPictures}
+          options={[
+            { value: false, label: 'Off' },
+            { value: true, label: 'On' },
+          ]}
+        />
+        <LabeledSeg
+          label="Word bank"
+          name="vw-letbank"
+          value={letters.wordBank}
+          onChange={setLettersWordBank}
+          options={[
+            { value: true, label: 'Show' },
+            { value: false, label: 'Hide' },
+          ]}
+        />
+        <LabeledSeg
+          label="Per page"
+          name="vw-letper"
+          value={letters.perPage}
+          onChange={setLettersPerPage}
+          options={[6, 8, 10, 12].map((n) => ({ value: n, label: String(n) }))}
+        />
+        <LabeledSeg
+          label="Order"
+          name="vw-letorder"
+          value={letters.shuffleOrder}
+          onChange={setLettersShuffle}
+          options={[
+            { value: false, label: 'List order' },
+            { value: true, label: 'Shuffle' },
+          ]}
+        />
+        <LabeledSeg
+          label="Answer key"
+          name="vw-letkey"
+          value={letters.answerKey}
+          onChange={setLettersAnswerKey}
           options={[
             { value: true, label: 'Include' },
             { value: false, label: 'Skip' },
