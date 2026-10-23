@@ -66,13 +66,13 @@ export function SegControl<T extends string | number | boolean>({
       {options.map((opt) => {
         const active = opt.value === value;
         return (
-          <label key={String(opt.value)} style={{ ...segStyle(active), fontFamily: BODY }}>
+          <label key={String(opt.value)} className="vw-seg-opt" style={{ ...segStyle(active), fontFamily: BODY }}>
             <input
               type="radio"
               name={name}
               checked={active}
               onChange={() => onChange(opt.value)}
-              style={{ display: 'none' }}
+              className="vw-sr-only"
             />
             {opt.label}
           </label>

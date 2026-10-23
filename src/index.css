@@ -147,6 +147,37 @@ input[type='range'] {
   color: #1a3260 !important;
 }
 
+/* ── Keyboard focus (U4) ─────────────────────────────────────────────────────
+   One consistent teal ring for anything focusable, shown for keyboard use only
+   (:focus-visible), so mouse clicks stay clean. Segmented controls hide their
+   radio inputs visually (not display:none, which removes them from tab order)
+   and ring the whole pill via :has(input:focus-visible). */
+:focus-visible {
+  outline: 3px solid #3fa6a0;
+  outline-offset: 2px;
+}
+.vw-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.vw-seg-opt {
+  position: relative;
+}
+.vw-seg-opt:has(input:focus-visible) {
+  outline: 3px solid #3fa6a0;
+  outline-offset: 2px;
+}
+.vw-seg-opt input:focus-visible {
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .vw-card {
     transition: none;

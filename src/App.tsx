@@ -139,10 +139,10 @@ function ModeGroup({ modes }: { modes: DisplayMode[] }) {
         return (
           <label
             key={m}
-            className={active ? undefined : 'vw-seg-idle'}
+            className={active ? 'vw-seg-opt' : 'vw-seg-opt vw-seg-idle'}
             style={{ ...segStyle(active), fontFamily: BODY }}
           >
-            <input type="radio" name="vw-mode" checked={active} onChange={() => setMode(m)} style={{ display: 'none' }} />
+            <input type="radio" name="vw-mode" checked={active} onChange={() => setMode(m)} className="vw-sr-only" />
             {MODE_LABELS[m]}
           </label>
         );
@@ -222,8 +222,8 @@ function Toolbar() {
               {(['card', 'stylized'] as StylePreset[]).map((p) => {
                 const active = stylePreset === p;
                 return (
-                  <label key={p} style={{ ...segStyle(active), fontFamily: BODY }}>
-                    <input type="radio" name="vw-style" checked={active} onChange={() => setStyle(p)} style={{ display: 'none' }} />
+                  <label key={p} className="vw-seg-opt" style={{ ...segStyle(active), fontFamily: BODY }}>
+                    <input type="radio" name="vw-style" checked={active} onChange={() => setStyle(p)} className="vw-sr-only" />
                     {p === 'card' ? 'Plain' : 'Stylized'}
                   </label>
                 );
@@ -303,13 +303,13 @@ function Toolbar() {
               ).map(([val, label]) => {
                 const active = contentMode === val;
                 return (
-                  <label key={val} style={{ ...segStyle(active), fontFamily: BODY }}>
+                  <label key={val} className="vw-seg-opt" style={{ ...segStyle(active), fontFamily: BODY }}>
                     <input
                       type="radio"
                       name="vw-content"
                       checked={active}
                       onChange={() => setContentMode(val)}
-                      style={{ display: 'none' }}
+                      className="vw-sr-only"
                     />
                     {label}
                   </label>
