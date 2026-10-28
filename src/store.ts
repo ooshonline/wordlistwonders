@@ -924,7 +924,12 @@ export const useStore = create<Store>((set, get) => {
       orderedIds.forEach((id, i) => (positions[id] = wallAutoPos(i, showImage, showText)));
       const cardScale: Record<string, number> = {};
       s.words.forEach((w) => (cardScale[w.id] = 1));
+      const before = { positions: s.positions, cardScale: s.cardScale };
       mutateSets((sets) => sets.map((st) => (st.id === s.id ? { ...st, positions, cardScale } : st)));
+      // Restore only this set's card layout, so edits made elsewhere meanwhile survive an undo.
+      showUndoToast('Card layout reset.', () =>
+        mutateSets((sets) => sets.map((st) => (st.id === s.id ? { ...st, ...before } : st))),
+      );
     },
 
     // ── carousel ──
@@ -966,7 +971,16 @@ export const useStore = create<Store>((set, get) => {
         cur[wordId] = !cur[wordId];
         return { revealedBySet: { ...s.revealedBySet, [s.currentSetId]: cur } };
       }),
-    resetReveal: () => set((s) => ({ revealedBySet: { ...s.revealedBySet, [s.currentSetId]: {} } })),
+    resetReveal: () => {
+      const setId = get().currentSetId;
+      const before = get().revealedBySet[setId];
+      set((s) => ({ revealedBySet: { ...s.revealedBySet, [setId]: {} } }));
+      // Nothing was revealed, so there is nothing worth undoing.
+      if (!before || !Object.values(before).some(Boolean)) return;
+      showUndoToast('All words hidden again.', () =>
+        set((s) => ({ revealedBySet: { ...s.revealedBySet, [setId]: before } })),
+      );
+    },
 
     // ── missing word ──
     removeOneWord: () => {
