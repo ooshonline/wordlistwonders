@@ -209,11 +209,11 @@ function Toolbar() {
       {isDisplay && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ ...groupLabel, color: C.teal }}>Print</span>
+            <span style={{ ...groupLabel, color: C.teal }}>Worksheets</span>
             <ModeGroup modes={PRINT_MODES} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ ...groupLabel, color: C.orange }}>Project</span>
+            <span style={{ ...groupLabel, color: C.orange }}>Class games</span>
             <ModeGroup modes={PROJECT_MODES} />
           </div>
 
@@ -451,6 +451,7 @@ const navBtnOutline: React.CSSProperties = {
   alignItems: 'center',
 };
 const groupLabel: React.CSSProperties = {
+  whiteSpace: 'nowrap',
   fontSize: 11,
   fontWeight: 800,
   textTransform: 'uppercase',
