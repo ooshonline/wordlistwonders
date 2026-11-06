@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore, currentSet } from '../store';
 import { C, DISPLAY, BODY } from '../tokens';
 import { Icon, icons, LabeledSeg } from '../components/ui';
+import { Confetti } from '../components/Confetti';
 import {
   unassignedChips,
   bucketCounts,
@@ -77,6 +78,7 @@ export function CategorySort() {
       <div style={{ textAlign: 'center', minHeight: 26 }}>
         {allSorted ? (
           <div style={{ fontFamily: DISPLAY, fontSize: 24, fontWeight: 800, color: C.tealDeep }}>
+            <Confetti />
             All sorted! 🎉
           </div>
         ) : (

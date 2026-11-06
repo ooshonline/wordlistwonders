@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore, currentSet } from '../store';
 import { C, DISPLAY, BODY } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
+import { Confetti } from '../components/Confetti';
 import { Icon, icons, LabeledSeg, KeyTip, Kbd } from '../components/ui';
 import { useActivityKeys } from '../components/activityKeys';
 import { ALPHABET, GUESS_MISS_OPTIONS, guessProgress, keyState } from '../generators/guessWord';
@@ -72,6 +73,7 @@ export function GuessWord() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22, padding: '28px 20px' }}>
+      {p.solved && <Confetti burstKey={index + 1} pieces={60} />}
       <div style={{ display: 'flex', alignItems: 'center', gap: 20, maxWidth: '100%', minWidth: 0 }}>
         <button type="button" aria-label="Previous word" onClick={prev} style={navBtn} className="vw-guess-sidenav">
           <Icon path={icons.chevronLeft} size={26} />

@@ -4,6 +4,7 @@ import type { MatchMode } from '../generators/matching';
 import { C, DISPLAY } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
 import { SegControl } from '../components/ui';
+import { Confetti } from '../components/Confetti';
 
 const TEAM_NAMES = ['Team A', 'Team B', 'Team C', 'Team D'];
 
@@ -86,6 +87,7 @@ export function Matching() {
         <EmptyBoard mode={match.mode} hasWords={set.words.length > 0} />
       ) : match.done ? (
         <>
+          <Confetti />
           <div style={{ fontFamily: DISPLAY, fontSize: 34, fontWeight: 800, marginTop: 8 }}>Round Complete!</div>
           <div style={{ fontSize: 15, fontWeight: 700, color: C.ink2 }}>
             {winners.length === 1
