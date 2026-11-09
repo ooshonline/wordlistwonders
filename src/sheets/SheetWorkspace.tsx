@@ -162,6 +162,10 @@ export function SheetWorkspace() {
             ]}
           />
         </div>
+        {/* M6: nudge teachers to turn the credit on when sharing sheets with colleagues. */}
+        <div className="vw-noprint" style={{ fontSize: 13, opacity: 0.7, textAlign: 'center', maxWidth: 520 }}>
+          Sharing this sheet with a colleague? Turn on the credit line and the printout carries the free link.
+        </div>
 
         {(data.warning || blankClues > 0) && (
           <div
