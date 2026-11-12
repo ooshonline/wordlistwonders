@@ -202,6 +202,8 @@ export function Editor() {
               opacity: dragId === w.id ? 0.45 : 1,
               display: 'flex',
               alignItems: 'center',
+              // Wrap so the tier control, colors and buttons drop under the inputs on narrow screens.
+              flexWrap: 'wrap',
               gap: 16,
               padding: 14,
             }}
@@ -246,7 +248,7 @@ export function Editor() {
             <div style={{ width: 72, height: 72, flex: 'none' }}>
               <ImageSlot id={`slot-${w.id}`} fit="contain" shape="rounded" radius={14} placeholder="Image" />
             </div>
-            <div style={{ flex: 1, display: 'grid', gap: 6 }}>
+            <div style={{ flex: '1 1 220px', minWidth: 0, display: 'grid', gap: 6 }}>
               <input
                 value={w.text}
                 onChange={(e) => updateWordField(w.id, 'text', e.target.value)}
