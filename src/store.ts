@@ -1,3 +1,4 @@
+import type { WordRow } from './wordTable';
 import { create } from 'zustand';
 import type {
   ContentMode,
@@ -258,6 +259,7 @@ export interface StoreActions {
   addWord: () => void;
   /** Bulk-append words parsed from a pasted blob (split on newlines / commas). */
   addWords: (texts: string[]) => void;
+  addWordRows: (rows: WordRow[]) => void;
   removeWord: (id: string) => void;
   /** Move one word up (-1) or down (+1) in the current set (F4). */
   moveWord: (id: string, delta: number) => void;
@@ -780,6 +782,21 @@ export const useStore = create<Store>((set, get) => {
         .map((t) => t.trim())
         .filter(Boolean)
         .map((text, i) => ({ id: `w-${stamp}-${i}`, text, tier: 'normal' as Tier }));
+      if (words.length === 0) return;
+      mutateSets((sets) =>
+        sets.map((s) => (s.id === get().currentSetId ? { ...s, words: [...s.words, ...words] } : s)),
+      );
+    },
+    addWordRows: (rows) => {
+      const stamp = Date.now();
+      const words = rows
+        .filter((r) => r.text.trim())
+        .map((r, i) => ({
+          id: `w-${stamp}-${i}`,
+          text: r.text.trim(),
+          tier: r.tier,
+          ...(r.clue ? { clue: r.clue } : {}),
+        }));
       if (words.length === 0) return;
       mutateSets((sets) =>
         sets.map((s) => (s.id === get().currentSetId ? { ...s, words: [...s.words, ...words] } : s)),

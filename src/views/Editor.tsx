@@ -5,6 +5,7 @@ import { C, DISPLAY, RAINBOW } from '../tokens';
 import { ImageSlot } from '../components/ImageSlot';
 import { Icon, SegControl, icons } from '../components/ui';
 import { serializeSet, setFilename, parseSetFile } from '../setIO';
+import { parseWordTable, tableToSet, looksLikeTable } from '../wordTable';
 
 const TIERS: { value: Tier; label: string }[] = [
   { value: 'key', label: 'Key' },
@@ -32,6 +33,7 @@ export function Editor() {
   const toggleRecorded = useStore((s) => s.toggleRecorded);
   const speakWord = useStore((s) => s.speakWord);
   const importSet = useStore((s) => s.importSet);
+  const addWordRows = useStore((s) => s.addWordRows);
   const notify = useStore((s) => s.notify);
 
   const [pasteOpen, setPasteOpen] = useState(false);
@@ -70,7 +72,9 @@ export function Editor() {
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        importSet(parseSetFile(String(reader.result)));
+        const text = String(reader.result);
+        // CSV / TSV / plain-text files become a new set (F3); everything else is our JSON.
+        importSet(/\.(csv|tsv|txt)$/i.test(file.name) ? tableToSet(text, file.name) : parseSetFile(text));
       } catch (err) {
         notify(err instanceof Error ? err.message : "Sorry — couldn't read that file.");
       }
@@ -80,13 +84,19 @@ export function Editor() {
   };
 
   // Split a pasted blob on newlines and commas into individual words.
-  const parsedWords = pasteText
-    .split(/[\n,]+/)
-    .map((t) => t.trim())
-    .filter(Boolean);
+  // Text with tabs (copied from a spreadsheet) is a table: word, clue, tier (F3).
+  const isTable = looksLikeTable(pasteText);
+  const parsedRows = isTable ? parseWordTable(pasteText) : [];
+  const parsedWords = isTable
+    ? parsedRows.map((r) => r.text)
+    : pasteText
+        .split(/[\n,]+/)
+        .map((t) => t.trim())
+        .filter(Boolean);
 
   const handleAddPasted = () => {
-    addWords(parsedWords);
+    if (isTable) addWordRows(parsedRows);
+    else addWords(parsedWords);
     setPasteText('');
     setPasteOpen(false);
   };
@@ -125,7 +135,7 @@ export function Editor() {
           <input
             ref={fileRef}
             type="file"
-            accept="application/json,.json"
+            accept="application/json,.json,.csv,.tsv,.txt,text/csv,text/tab-separated-values"
             onChange={handleImportFile}
             style={{ display: 'none' }}
           />
@@ -373,7 +383,7 @@ export function Editor() {
             }}
           >
             <label style={{ fontWeight: 700, fontSize: 14, color: C.ink }}>
-              Paste your words — one per line, or separated by commas. We'll add them all at once.
+              Paste your words — one per line, or separated by commas. Copying from a spreadsheet? Paste columns for word, clue and tier (key / normal / bonus).
             </label>
             <textarea
               value={pasteText}
