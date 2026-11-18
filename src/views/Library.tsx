@@ -1,7 +1,60 @@
+import { useState } from 'react';
 import { useStore } from '../store';
 import { C, DISPLAY } from '../tokens';
 import { GreenButton, Icon, icons } from '../components/ui';
 import { AdSlot } from '../components/AdSlot';
+
+const HINT_KEY = 'wordlist_wonders_howitworks_seen';
+
+// One-time "how it works" strip. Remembered per browser; storage failures just mean it shows again.
+function HowItWorks() {
+  const [seen, setSeen] = useState(() => {
+    try {
+      return localStorage.getItem(HINT_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  if (seen) return null;
+  const dismiss = () => {
+    setSeen(true);
+    try {
+      localStorage.setItem(HINT_KEY, '1');
+    } catch {
+      /* ignore */
+    }
+  };
+  const steps = ['1. Make or open a word list', '2. Click Make Activities', '3. Print a worksheet or project a game'];
+  return (
+    <div
+      role="note"
+      className="vw-noprint"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+        flexWrap: 'wrap',
+        background: C.surface,
+        border: `2px solid ${C.borderLight}`,
+        borderRadius: 16,
+        padding: '12px 16px',
+        marginBottom: 20,
+        color: C.ink,
+        fontSize: 14,
+      }}
+    >
+      <strong style={{ fontFamily: DISPLAY, fontSize: 16 }}>How it works</strong>
+      <span style={{ display: 'flex', gap: '4px 18px', flexWrap: 'wrap', flex: '1 1 260px', minWidth: 0 }}>
+        {steps.map((t) => (
+          <span key={t}>{t}</span>
+        ))}
+      </span>
+      <button type="button" onClick={dismiss} style={clearBtn}>
+        Got it
+      </button>
+    </div>
+  );
+}
 
 export function Library() {
   const sets = useStore((s) => s.sets);
@@ -31,6 +84,8 @@ export function Library() {
           + New Set
         </GreenButton>
       </div>
+
+      <HowItWorks />
 
       {/* Search is only useful once there's something to search. */}
       {!noSets && (
