@@ -70,7 +70,7 @@ export function Reveal() {
                 <ImageSlot id={`slot-${w.id}`} fit="contain" shape="rounded" radius={16} placeholder="Image" />
               </div>
               {isRevealed ? (
-                <div>{w.text}</div>
+                <div className="vw-reveal-pop">{w.text}</div>
               ) : (
                 <div style={{ opacity: 0.5, fontSize: '0.6em', fontWeight: 700 }}>Click to reveal</div>
               )}

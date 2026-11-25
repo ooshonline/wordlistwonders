@@ -87,7 +87,7 @@ export function MissingWord() {
                   <div style={{ width: imgSize, height: imgSize, maxWidth: '100%', margin: '0 auto 10px' }}>
                     <ImageSlot id={`slot-${w.id}`} fit="contain" shape="rounded" radius={16} placeholder="Image" />
                   </div>
-                  <div>{w.text}</div>
+                  <div className={missing.removedId === w.id ? 'vw-reveal-pop' : undefined}>{w.text}</div>
                 </>
               )}
             </div>
